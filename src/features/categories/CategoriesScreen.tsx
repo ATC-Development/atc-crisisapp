@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 
 const crisisCategories = [
-  { name: "Fire", slug: "fire" },
-  { name: "Security", slug: "security" },
-  { name: "Cyber Attack", slug: "cyber" },
-  { name: "Severe Weather", slug: "weather" },
-  { name: "Medical Emergency", slug: "medical" },
-  { name: "Other", slug: "other" }
+  { name: "Fire", slug: "fire", color: "bg-red-600" },
+  { name: "Security", slug: "security", color: "bg-yellow-600" },
+  { name: "Cyber Attack", slug: "cyber", color: "bg-blue-600" },
+  { name: "Severe Weather", slug: "weather", color: "bg-gray-600" },
+  { name: "Medical Emergency", slug: "medical", color: "bg-green-600" },
+  { name: "Other", slug: "other", color: "bg-purple-600" }
 ];
 
 export default function CategoriesScreen() {
@@ -18,17 +18,18 @@ export default function CategoriesScreen() {
         Select Crisis Category
       </h1>
 
-      <div className="w-full max-w-sm space-y-4">
-        {crisisCategories.map(category => (
-          <button
-            key={category.slug}
-            onClick={() => navigate(`/checklist/${category.slug}`)}
-            className="w-full bg-white text-gray-800 font-semibold py-4 px-6 rounded-xl shadow hover:bg-blue-50 transition"
-          >
-            {category.name}
-          </button>
-        ))}
-      </div>
+<div className="flex flex-col space-y-4 w-full max-w-xs mx-auto">
+  {crisisCategories.map((category) => (
+    <button
+      key={category.slug}
+      className={`text-white py-4 px-6 rounded-lg text-lg ${category.color}`}
+      onClick={() => navigate(`/checklist/${category.slug}`)}
+    >
+      {category.name}
+    </button>
+  ))}
+</div>
+
     </div>
   );
 }
