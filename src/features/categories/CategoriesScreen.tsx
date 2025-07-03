@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import poolPic from "../../assets/Augustan_Pool.jpg";
 
 const crisisCategories = [
   { name: "Fire", slug: "fire", color: "bg-red-600" },
@@ -13,7 +14,7 @@ export default function CategoriesScreen() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center px-4 py-6">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center px-4 py-6" style={{backgroundImage: `url(${poolPic})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Select Crisis Category
       </h1>
