@@ -4,7 +4,7 @@ export const checklistData: Record<string, { title: string; items: ChecklistItem
   fire: {
     title: "Fire Emergency Checklist",
     items: [
-      { label: "Call 911", link: "tel:911" },
+      { label: "Call 911", link: "tel:7067364748" },
       "Get to safety",
       "Evacuate residents if able"
     ]
@@ -13,10 +13,10 @@ export const checklistData: Record<string, { title: string; items: ChecklistItem
   cyber: {
     title: "Cyber Attack Checklist",
     items: [
-      { label: "Contact MSP", link: "tel:3604206344" },
-      { label: "Contact Information & Systems Manager", link: "tel:3604206344" },
-      { label: "Contact Company President", link: "tel:3604206344" },
-      { label: "Contact CEO", link: "tel:3604206344" },
+      { label: "Contact MSP", link: "tel:7067364748" },
+      { label: "Contact Information & Systems Manager", link: "tel:7067364748" },
+      { label: "Contact Company President", link: "tel:7067364748" },
+      { label: "Contact CEO", link: "tel:7067364748" },
       "Log off all systems",
       "Disconnect from network",
       "Notify all employees",
