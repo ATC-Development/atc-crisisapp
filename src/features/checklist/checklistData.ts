@@ -6,7 +6,14 @@ export const checklistData: Record<string, { title: string; items: ChecklistItem
     items: [
       { label: "Call 911", link: "tel:7067364748" },
       "Get to safety",
-      "Evacuate residents if able"
+      "Evacuate residents if able",
+      "Use fire extinguisher if safe to do so",
+      "Close doors behind you",
+      "Do not use elevators",
+      "Notify fire department of any trapped individuals",
+      "Gather at designated assembly point",
+      "Check for injuries and administer first aid if trained",
+      "Do not re-enter the building until cleared by authorities",
     ]
   },
   // Add more categories later like 'security', 'cyber', etc.

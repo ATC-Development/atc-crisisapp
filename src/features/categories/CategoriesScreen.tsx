@@ -33,8 +33,7 @@ return (
           <button
             key={category.slug}
             className={`text-white py-4 px-6 rounded-lg text-lg ${category.color}`}
-            onClick={() => navigate(`/checklist/${category.slug}`)}
-          >
+            onClick={() => navigate(`/checklist/${category.slug}`)}>
             {category.name}
           </button>
         ))}
