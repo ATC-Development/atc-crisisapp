@@ -3,42 +3,32 @@ import { useParams } from "react-router-dom";
 import { checklistData } from "./checklistData";
 import BackButton from "../components/BackButton";
 import FormSelector from "../forms/formSelector";
+import { loadLocalStorage, saveLocalStorage } from "../utils/localStorageHelpers";
 
 export default function ChecklistScreen() {
   const { category } = useParams<{ category: string }>();
-  const checklist = checklistData[category || ""] || { title: "Unknown", items: [] };
+  const checklist = checklistData[category || ""] || { title: "Coming Soon", items: [] };
   const storageKey = `checklist-${category}`;
 
   // 🧠 Use null to avoid premature rendering and storage overwrite
   const [checkedItems, setCheckedItems] = useState<boolean[] | null>(null);
 
   // ✅ Load from localStorage on mount
-  useEffect(() => {
-    if (!category) return;
 
-    const saved = localStorage.getItem(storageKey);
-    if (saved !== null) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setCheckedItems(parsed);
-          return;
-        }
-      } catch (e) {
-        console.warn("Invalid checklist state in localStorage:", e);
-      }
-    }
+useEffect(() => {
+  if (!category) return;
 
-    // Fallback only if no saved state
-    if (checklist.items.length > 0) {
-      setCheckedItems(Array(checklist.items.length).fill(false));
-    }
-  }, [category, checklist.items.length, storageKey]);
+  const fallback = Array(checklist.items.length).fill(false); // fallback type is boolean[]
+  const loaded = loadLocalStorage<boolean[]>(storageKey, fallback);
+
+  setCheckedItems(loaded);
+}, [category, checklist.items.length, storageKey]);
+
 
   // ✅ Save to localStorage on change
   useEffect(() => {
     if (checkedItems !== null) {
-      localStorage.setItem(storageKey, JSON.stringify(checkedItems));
+      saveLocalStorage<boolean[]>(storageKey, checkedItems);
     }
   }, [checkedItems, storageKey]);
 
@@ -54,8 +44,15 @@ export default function ChecklistScreen() {
 
   // ✅ Avoid rendering until state is loaded
   if (checkedItems === null) {
-    return <div className="p-4">Loading checklist...</div>;
+    console.log("Loading checklist...");
+
+    return (
+      <div className="p-4">
+        <BackButton />
+      </div>
+    );
   }
+
 
   return (
     <div className="p-4 max-w-md mx-auto">
