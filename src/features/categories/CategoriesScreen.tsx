@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/Augustan_Pool.jpg";
 import poolPic from "../../assets/Augustan_Pool.jpg";
+import { clearAppLocalStorage } from "../utils/localStorageHelpers";
 
 const crisisCategories = [
   { name: "Fire", slug: "fire", color: "bg-red-600" },
@@ -8,14 +9,14 @@ const crisisCategories = [
   { name: "Cyber Attack", slug: "cyber", color: "bg-blue-600" },
   { name: "Severe Weather", slug: "weather", color: "bg-gray-600" },
   { name: "Medical Emergency", slug: "medical", color: "bg-green-600" },
-  { name: "Other", slug: "other", color: "bg-purple-600" }
+  { name: "Other", slug: "other", color: "bg-purple-600" },
 ];
 
 export default function CategoriesScreen() {
   const navigate = useNavigate();
 
 return (
-  <div className="relative min-h-screen bg-gray-100 flex flex-col items-center px-4 py-6" style={{backgroundImage: `url(${poolPic})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
+  <main className="flex flex-col justify-between min-h-screen bg-gray-100 px-4 py-6 relative" style={{backgroundImage: `url(${poolPic})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
     {/* Background Image Layer with Opacity */}
     <div
       className="absolute inset-0 bg-no-repeat bg-top bg-contain opacity-90 z-0"
@@ -23,7 +24,7 @@ return (
     />
 
     {/* Foreground Content */}
-    <div className="relative z-10 w-full">
+    <div className="relative z-10 w-full flex-grow flex flex-col items-center">
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Select Crisis Category
       </h1>
@@ -39,7 +40,28 @@ return (
         ))}
       </div>
     </div>
-  </div>
+
+    <footer className="w-full px-4 py-4 bg-white bg-opacity-30 border-t z-10 flex items-stretch rounded-lg text-sm text-gray-200 h-[80px]">
+      <div className="w-2/5">
+        <button
+          onClick={() => {
+            if (window.confirm("Clear ALL saved checklists and forms?")) {
+              clearAppLocalStorage();
+              window.location.reload();
+            }
+          }}
+          className="text-xs text-center text-red-600 bg-black rounded-full px-4 py-1 hover:bg-gray-300 transition w-full"
+        >
+          Reset All Checklists & Forms
+        </button>
+      </div>
+
+      <div className="text-xs w-3/5 flex flex-col justify-end text-right">
+        <p>© 2025 Crisis Management App</p>
+        <p className="text-xs">Developed by ATC Team</p>
+      </div>
+    </footer>
+  </main>
 );
 
 }

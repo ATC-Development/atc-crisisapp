@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { checklistData } from "./checklistData";
 import BackButton from "../components/BackButton";
 import FormSelector from "../forms/formSelector";
-import { loadLocalStorage, saveLocalStorage } from "../utils/localStorageHelpers";
+import { loadLocalStorage, saveLocalStorage, clearChecklist } from "../utils/localStorageHelpers";
 
 export default function ChecklistScreen() {
   const { category } = useParams<{ category: string }>();
@@ -80,6 +80,17 @@ useEffect(() => {
       </ul>
 
       <FormSelector />
+      <button
+        onClick={() => {
+          if (category && window.confirm("Clear this checklist?")) {
+            clearChecklist(category);
+            window.location.reload();
+          }
+        }}
+        className="mt-8 w-full text-sm text-red-600 underline"
+      >
+        Clear This Checklist
+      </button>
     </div>
   );
 }

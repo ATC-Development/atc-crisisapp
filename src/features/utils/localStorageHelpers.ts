@@ -20,17 +20,31 @@ export function saveLocalStorage<T>(key: string, data: T): void {
         console.error(`Failed to save data to localStorage for key "${key}":`, e);
     }
 }
-export function clearLocalStorage(key: string): void {
-    try {
-        localStorage.removeItem(key);
-    } catch (e) {
-        console.error(`Failed to clear localStorage for key "${key}":`, e);
-    }
+export function clearChecklist(category: string): void {
+  try {
+    localStorage.removeItem(`checklist-${category}`);
+  } catch (e) {
+    console.error(`Failed to clear checklist for "${category}"`, e);
+  }
 }
-export function clearAllLocalStorage(): void {
-    try {
-        localStorage.clear();
-    } catch (e) {
-        console.error("Failed to clear all localStorage:", e);
-    }
+
+export function clearForm(formId: string): void {
+  try {
+    localStorage.removeItem(`form-${formId}`);
+  } catch (e) {
+    console.error(`Failed to clear form for "${formId}"`, e);
+  }
+}
+
+// Optional: full app reset (if needed)
+export function clearAppLocalStorage(): void {
+  try {
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith("checklist-") || key.startsWith("form-")) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (e) {
+    console.error("Failed to clear app-specific localStorage:", e);
+  }
 }
