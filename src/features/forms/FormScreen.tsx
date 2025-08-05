@@ -141,11 +141,15 @@ export default function FormScreen() {
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json(); // 👈 Parse JSON response
+      console.log("Response from Power Automate:", data); // 👈 Log response
+
       if (res.ok) {
         setSubmitSuccess(true);
         setSubmitMessage("Form submitted successfully.");
         // Optional: clear local storage or reset form
         localStorage.removeItem(`form-${formId}`);
+        setForm(initialForm); // Reset to initial form state
       } else {
         setSubmitSuccess(false);
         setSubmitMessage("Submission failed. Please try again.");

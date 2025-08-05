@@ -28,7 +28,7 @@ export const FormData: Record<
 > = {
   witness: {
     title: "Witness Information",
-    submitUrl: "https://prod-123.westeurope.logic.azure.com/.../witness-endpoint",
+    submitUrl: "https://prod-55.westus.logic.azure.com:443/workflows/c056ff16ee884afd96345604a052290a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Amivf9ycqB_YNDkbNVRP1U_hdfoFL3XwS8MQPCEwwc4",
     items: [
       {
         id: "witnessName",
