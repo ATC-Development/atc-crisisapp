@@ -182,44 +182,77 @@ export default function FormScreen() {
             </label>
 
             {/* Main field rendering by type */}
-            {item.type === "date" || item.type === "datetime" ? (
-              <input
-                type={item.type === "datetime" ? "datetime-local" : "date"}
-                value={item.value.toString()}
-                onChange={(e) => handleChange(item.id, e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              />
-            ) : item.type === "integer" ? (
-              <input
-                type="number"
-                value={item.value.toString()}
-                onChange={(e) => handleChange(item.id, e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              />
-            ) : item.type === "boolean" ? (
-              <select
-                value={item.value.toString()}
-                onChange={(e) => handleChange(item.id, e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="">Select Yes or No</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            ) : (
-              <textarea
-                ref={(el: HTMLTextAreaElement | null) => {
-                  textareaRefs.current[item.id] = el;
-                }}
-                rows={1}
-                value={item.value.toString()}
-                onChange={(e) => {
-                  handleChange(item.id, e.target.value);
-                  autoResize(e.target);
-                }}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-y overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            )}
+            {(() => {
+              switch (item.type) {
+                case "datetime":
+                case "date":
+                  return (
+                    <input
+                      type={
+                        item.type === "datetime" ? "datetime-local" : "date"
+                      }
+                      value={item.value.toString()}
+                      onChange={(e) => handleChange(item.id, e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    />
+                  );
+
+                case "integer":
+                  return (
+                    <input
+                      type="number"
+                      value={item.value.toString()}
+                      onChange={(e) => handleChange(item.id, e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    />
+                  );
+
+                case "boolean":
+                  return (
+                    <select
+                      value={item.value.toString()}
+                      onChange={(e) => handleChange(item.id, e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    >
+                      <option value="">Select Yes or No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  );
+
+                case "select":
+                  return (
+                    <select
+                      value={item.value.toString()}
+                      onChange={(e) => handleChange(item.id, e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    >
+                      <option value="">-- Select --</option>
+                      {item.options?.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  );
+
+                default:
+                  return (
+                    <textarea
+                      ref={(el: HTMLTextAreaElement | null) => {
+                        textareaRefs.current[item.id] = el;
+                      }}
+                      rows={1}
+                      value={item.value.toString()}
+                      onChange={(e) => {
+                        handleChange(item.id, e.target.value);
+                        autoResize(e.target);
+                      }}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-y overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  );
+              }
+            })()}
 
             {/* Sub-item fields */}
             {item.subItems?.map((sub) => (
@@ -231,58 +264,90 @@ export default function FormScreen() {
                   {sub.label}
                 </label>
 
-                {sub.type === "date" || sub.type === "datetime" ? (
-                  <input
-                    type={sub.type === "datetime" ? "datetime-local" : "date"}
-                    value={sub.value.toString()}
-                    disabled={disableSubItems}
-                    onChange={(e) => handleChange(sub.id, e.target.value)}
-                    className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm ${
-                      disableSubItems ? "bg-gray-100 text-gray-500" : ""
-                    }`}
-                  />
-                ) : sub.type === "integer" ? (
-                  <input
-                    type="number"
-                    value={sub.value.toString()}
-                    disabled={disableSubItems}
-                    onChange={(e) => handleChange(sub.id, e.target.value)}
-                    className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm ${
-                      disableSubItems ? "bg-gray-100 text-gray-500" : ""
-                    }`}
-                  />
-                ) : sub.type === "boolean" ? (
-                  <select
-                    value={sub.value.toString()}
-                    disabled={disableSubItems}
-                    onChange={(e) => handleChange(sub.id, e.target.value)}
-                    className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm ${
-                      disableSubItems ? "bg-gray-100 text-gray-500" : ""
-                    }`}
-                  >
-                    <option value="">Select Yes or No</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                ) : (
-                  <textarea
-                    ref={(el: HTMLTextAreaElement | null) => {
-                      textareaRefs.current[sub.id] = el;
-                    }}
-                    rows={1}
-                    value={sub.value.toString()}
-                    disabled={disableSubItems}
-                    onChange={(e) => {
-                      handleChange(sub.id, e.target.value);
-                      autoResize(e.target);
-                    }}
-                    className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-y overflow-hidden ${
-                      disableSubItems
-                        ? "bg-gray-100 text-gray-500"
-                        : "focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    }`}
-                  />
-                )}
+                {(() => {
+                  const commonClasses = `w-full border border-gray-300 rounded-md px-3 py-2 text-sm ${
+                    disableSubItems ? "bg-gray-100 text-gray-500" : ""
+                  }`;
+
+                  switch (sub.type) {
+                    case "datetime":
+                    case "date":
+                      return (
+                        <input
+                          type={
+                            sub.type === "datetime" ? "datetime-local" : "date"
+                          }
+                          value={sub.value.toString()}
+                          disabled={disableSubItems}
+                          onChange={(e) => handleChange(sub.id, e.target.value)}
+                          className={commonClasses}
+                        />
+                      );
+
+                    case "integer":
+                      return (
+                        <input
+                          type="number"
+                          value={sub.value.toString()}
+                          disabled={disableSubItems}
+                          onChange={(e) => handleChange(sub.id, e.target.value)}
+                          className={commonClasses}
+                        />
+                      );
+
+                    case "boolean":
+                      return (
+                        <select
+                          value={sub.value.toString()}
+                          disabled={disableSubItems}
+                          onChange={(e) => handleChange(sub.id, e.target.value)}
+                          className={commonClasses}
+                        >
+                          <option value="">Select Yes or No</option>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                      );
+
+                    case "select":
+                      return (
+                        <select
+                          value={sub.value.toString()}
+                          disabled={disableSubItems}
+                          onChange={(e) => handleChange(sub.id, e.target.value)}
+                          className={commonClasses}
+                        >
+                          <option value="">-- Select --</option>
+                          {sub.options?.map((option: string) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      );
+
+                    default:
+                      return (
+                        <textarea
+                          ref={(el: HTMLTextAreaElement | null) => {
+                            textareaRefs.current[sub.id] = el;
+                          }}
+                          rows={1}
+                          value={sub.value.toString()}
+                          disabled={disableSubItems}
+                          onChange={(e) => {
+                            handleChange(sub.id, e.target.value);
+                            autoResize(e.target);
+                          }}
+                          className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-y overflow-hidden ${
+                            disableSubItems
+                              ? "bg-gray-100 text-gray-500"
+                              : "focus:outline-none focus:ring-1 focus:ring-blue-400"
+                          }`}
+                        />
+                      );
+                  }
+                })()}
               </div>
             ))}
           </div>

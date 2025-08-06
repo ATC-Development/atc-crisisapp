@@ -1,10 +1,11 @@
-export type FieldType = "text" | "integer" | "date" | "datetime" | "boolean";
+export type FieldType = "text" | "integer" | "date" | "datetime" | "boolean" | "select";
 
 export type FormSubItem = {
   id: string;
   label: string;
   value: string | number;
   type?: FieldType;
+  options?: string[]; // For select fields
   required?: boolean;
 };
 
@@ -13,10 +14,13 @@ export type FormDataItem = {
   label: string;
   value: string | number;
   type?: FieldType;
+  options?: string[]; // For select fields
   required?: boolean;
   subItems?: FormSubItem[];
 };
 
+export const LOCATION_OPTIONS = [
+  "901", "Augustan", "Barrington", "Forest Hills", "Hamilton Park", "Helena Springs", "MacArthur Park", "McHenry Square", "Sanctuary", "Sterlington", "The Sterling"];
 
 export const FormData: Record<
   string,
@@ -48,7 +52,8 @@ export const FormData: Record<
         id: "location",
         label: "Location",
         value: "",
-        type: "text",
+        type: "select",
+        options: LOCATION_OPTIONS,
         required: true,
       },
       {
