@@ -288,6 +288,7 @@ export default function FormScreen() {
                       return (
                         <input
                           type="number"
+                          step="1"
                           value={sub.value.toString()}
                           disabled={disableSubItems}
                           onChange={(e) => handleChange(sub.id, e.target.value)}

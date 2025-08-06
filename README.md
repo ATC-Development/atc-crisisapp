@@ -16,7 +16,9 @@ This is a self-contained, offline-capable React + Vite Progressive Web App (PWA)
   - Other
 - 📞 Click-to-call for emergency contacts
 - 📝 Form completion and PDF generation for HR distribution
-- 🔐 Authenticates with Microsoft 365 to send HR emails
+- 📤 Form data is:
+  - Sent via Microsoft 365 authenticated email to HR
+  - Stored in SharePoint via Power Automate
 
 ## 🧰 Tech Stack
 
@@ -33,3 +35,15 @@ This is a self-contained, offline-capable React + Vite Progressive Web App (PWA)
 npm install
 npm run dev
 ```
+
+## 🔄 Versioning and Cache Busting
+
+This app uses a browser-based version check (`__APP_VERSION__`) to detect new deployments and force a reload of cached assets.
+
+> ⚠️ **Important:** You must manually update the `version` field in `package.json` before each deploy to ensure clients receive the latest version.
+
+```bash
+npm version patch
+```
+
+This ensures users always receive the latest version without needing to clear their browser cache.
