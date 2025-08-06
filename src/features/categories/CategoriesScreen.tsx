@@ -15,53 +15,61 @@ const crisisCategories = [
 export default function CategoriesScreen() {
   const navigate = useNavigate();
 
-return (
-  <main className="flex flex-col justify-between min-h-screen bg-gray-100 px-4 py-6 relative" style={{backgroundImage: `url(${poolPic})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
-    {/* Background Image Layer with Opacity */}
-    <div
-      className="absolute inset-0 bg-no-repeat bg-top bg-contain opacity-90 z-0"
-      style={{ backgroundImage: `url(${logo})`, backgroundSize: 'cover' }}
-    />
+  return (
+    <main
+      className="flex flex-col justify-between min-h-screen bg-gray-100 px-4 py-6 relative"
+      style={{
+        backgroundImage: `url(${poolPic})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Background Image Layer with Opacity */}
+      <div
+        className="absolute inset-0 bg-no-repeat bg-top bg-contain opacity-90 z-0"
+        style={{ backgroundImage: `url(${logo})`, backgroundSize: "cover" }}
+      />
 
-    {/* Foreground Content */}
-    <div className="relative z-10 w-full flex-grow flex flex-col items-center">
-      <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        Select Crisis Category
-      </h1>
+      {/* Foreground Content */}
+      <div className="relative z-10 w-full flex-grow flex flex-col items-center">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
+          Select Crisis Category
+        </h1>
 
-      <div className="flex flex-col space-y-4 w-full max-w-xs mx-auto">
-        {crisisCategories.map((category) => (
+        <div className="flex flex-col space-y-4 w-full max-w-xs mx-auto">
+          {crisisCategories.map((category) => (
+            <button
+              key={category.slug}
+              className={`text-white py-4 px-6 rounded-lg text-lg ${category.color}`}
+              onClick={() => navigate(`/checklist/${category.slug}`)}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <footer className="w-full px-4 py-4 bg-white bg-opacity-30 border-t z-10 flex items-stretch rounded-lg text-sm text-gray-200 h-[80px]">
+        <div className="w-2/5">
           <button
-            key={category.slug}
-            className={`text-white py-4 px-6 rounded-lg text-lg ${category.color}`}
-            onClick={() => navigate(`/checklist/${category.slug}`)}>
-            {category.name}
+            onClick={() => {
+              if (window.confirm("Clear ALL saved checklists and forms?")) {
+                clearAppLocalStorage();
+                window.location.reload();
+              }
+            }}
+            className="text-xs text-center text-red-600 bg-black rounded-full px-4 py-1 hover:bg-gray-300 transition w-full"
+          >
+            Reset All Checklists & Forms
           </button>
-        ))}
-      </div>
-    </div>
+        </div>
 
-    <footer className="w-full px-4 py-4 bg-white bg-opacity-30 border-t z-10 flex items-stretch rounded-lg text-sm text-gray-200 h-[80px]">
-      <div className="w-2/5">
-        <button
-          onClick={() => {
-            if (window.confirm("Clear ALL saved checklists and forms?")) {
-              clearAppLocalStorage();
-              window.location.reload();
-            }
-          }}
-          className="text-xs text-center text-red-600 bg-black rounded-full px-4 py-1 hover:bg-gray-300 transition w-full"
-        >
-          Reset All Checklists & Forms
-        </button>
-      </div>
-
-      <div className="text-xs w-3/5 flex flex-col justify-end text-right">
-        <p>© 2025 Crisis Management App</p>
-        <p className="text-xs">Developed by ATC Team</p>
-      </div>
-    </footer>
-  </main>
-);
-
+        <div className="text-xs w-3/5 flex flex-col justify-end text-right">
+          <p>© 2025 Crisis Management App</p>
+          <p className="text-xs">Developed by ATC Team</p>
+          <p className="text-xs">v{__APP_VERSION__}</p> {/* 👈 Add this line */}
+        </div>
+      </footer>
+    </main>
+  );
 }
