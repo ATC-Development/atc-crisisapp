@@ -44,6 +44,11 @@ This app uses a browser-based version check (`__APP_VERSION__`) to detect new de
 
 ```bash
 npm version patch
+npm run build
+git add .
+git commit -m "xxxxxx"
+git push
+git run deploy
 ```
 
 This ensures users always receive the latest version without needing to clear their browser cache.
