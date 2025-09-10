@@ -32,7 +32,7 @@ export const FormData: Record<
 > = {
   witness: {
     title: "Witness Information",
-    submitUrl: "https://prod-55.westus.logic.azure.com:443/workflows/c056ff16ee884afd96345604a052290a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Amivf9ycqB_YNDkbNVRP1U_hdfoFL3XwS8MQPCEwwc4",
+    submitUrl: "https://3094d1355179eae8b957f6027e079f.0f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c056ff16ee884afd96345604a052290a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_p48HZKxxdBl5V5V_qIHnFvLuu18-K6VKliF_bhzCbs",
     items: [
       {
         id: "witnessName",
