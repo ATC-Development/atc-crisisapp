@@ -1,37 +1,61 @@
-type ChecklistItem = string | { label: string; link: string };
+type LinkItem = { label: string; link: string };
+type ChecklistItem = string | LinkItem | (string | LinkItem)[];
+
 
 export const checklistData: Record<string, { title: string; items: ChecklistItem[] }> = {
   fire: {
-    title: "Fire Emergency Checklist",
+    title: "Fire / Evacuation Checklist",
     items: [
-      { label: "Call 911", link: "tel:7067364748" },
-      "Get to safety",
-      "Evacuate residents if able",
-      "Use fire extinguisher if safe to do so",
-      "Close doors behind you",
-      "Do not use elevators",
-      "Notify fire department of any trapped individuals",
-      "Gather at designated assembly point",
-      "Check for injuries and administer first aid if trained",
-      "Do not re-enter the building until cleared by authorities",
+      "Actvate nearest alarm",
+      { label: "Call 911 (calls office now)", link: "tel:7067364748" },
+      "Evacuate using nearest exit (no elevators)",
+      "Assist others if safe to do so",
+      "Report to assembly area"
     ]
   },
-  // Add more categories later like 'security', 'cyber', etc.
-  cyber: {
-    title: "Cyber Attack Checklist",
+
+  shooter: {
+    title: "Active Shooter Checklist",
     items: [
-      { label: "Contact MSP", link: "tel:7067364748" },
-      { label: "Contact Information & Systems Manager", link: "tel:7067364748" },
-      { label: "Contact Company President", link: "tel:7067364748" },
-      { label: "Contact CEO", link: "tel:7067364748" },
-      "Log off all systems",
-      "Disconnect from network",
-      "Notify all employees",
-      "Change all passwords",
-      "Backup critical data",
-      "Document all actions taken",
-      "Contact law enforcement if necessary",
-      "Review and update cybersecurity policies",
-      "Conduct a post-incident review"
-    ]}
+      { label: "Call 911 (calls office now)", link: "tel:7067364748" },
+      "Run -> Hide -> Fight",
+      "RUN: Escape if possible\n--Leave belongings behind\n--Keep hands visible\n--Listen to police\n--Mark yourself safe",
+      "HIDE: Get out of shooters view\n--Blockage door with heavy furniture\nLock door\n--Don't restrict your options for movement\n--Silence phone\nStay quiet",
+      "FIGHT: Last option\n--Attempt to incapacitate or disrupt shooter\n--Throw objects\n--Yell\n--Commit to your actions"
+    ]
+  },
+
+  intruder: {
+    title: "Intruder / Hostile Threat Checklist",
+    items: [
+      { label: "Call 911 (calls office now)", link: "tel:7067364748" },
+      "Report details (who / what / where / when)",
+      "Notify security or supervisor",
+      "Submit photo / report via app"
+    ]
+  },
+
+  weather: {
+    title: "Severe Weather / Natural Disaster Checklist",
+    items: [ 
+      "Move to interior shelter or safe zone",
+      "Avoid windows and glass",
+      "Stay put until all clear",
+      "Monitor company alerts"
+    ]
+  },
+
+  medical: {
+    title: "Medical / Health Emergency Checklist",
+    items: [
+      [
+        "If unresponsive or major injury",
+        { label: "--Call 911 (calls office now)", link: "tel:7067364748" },
+        "--Start CPR / AED"
+      ],
+      "If minor injury:\n--Locate First Aid Kit\n--Report incident in app",
+      "On the job injury requiring medical attention:\n--Contact Human Resources for treatment instructions\n--Arrange for transport to medical facility"
+    ]
+  }
+
 };

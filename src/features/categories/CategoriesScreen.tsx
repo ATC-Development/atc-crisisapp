@@ -1,15 +1,22 @@
 import { useNavigate } from "react-router-dom";
-import logo from "../../assets/Augustan_Pool.jpg";
+// import logo from "../../assets/ATC Logo_1.jpg";
 import poolPic from "../../assets/Augustan_Pool.jpg";
 import { clearAppLocalStorage } from "../utils/localStorageHelpers";
 
 const crisisCategories = [
-  { name: "Fire", slug: "fire", color: "bg-red-600" },
-  { name: "Security", slug: "security", color: "bg-yellow-600" },
-  { name: "Cyber Attack", slug: "cyber", color: "bg-blue-600" },
-  { name: "Severe Weather", slug: "weather", color: "bg-gray-600" },
-  { name: "Medical Emergency", slug: "medical", color: "bg-green-600" },
-  { name: "Other", slug: "other", color: "bg-purple-600" },
+  { name: "Fire / Evacuation", slug: "fire", color: "bg-red-600" },
+  { name: "Active Shooter", slug: "shooter", color: "bg-yellow-600" },
+  { name: "Intruder / Hostile Threat", slug: "intruder", color: "bg-blue-600" },
+  {
+    name: "Severe Weather / Natural Disaster",
+    slug: "weather",
+    color: "bg-gray-600",
+  },
+  {
+    name: "Medical / Health Emergency",
+    slug: "medical",
+    color: "bg-green-600",
+  },
 ];
 
 export default function CategoriesScreen() {
@@ -27,7 +34,7 @@ export default function CategoriesScreen() {
       {/* Background Image Layer with Opacity */}
       <div
         className="absolute inset-0 bg-no-repeat bg-top bg-contain opacity-90 z-0"
-        style={{ backgroundImage: `url(${logo})`, backgroundSize: "cover" }}
+        style={{ backgroundImage: `url(${poolPic})`, backgroundSize: "cover" }}
       />
 
       {/* Foreground Content */}
