@@ -8,6 +8,10 @@ import {
   loadLocalStorage,
   saveLocalStorage,
 } from "../utils/localStorageHelpers";
+import { PhotosField } from "./fields/photosField";
+import type { PhotoPayload } from "./fields/photosField";
+
+type FieldValue = string | number | boolean | PhotoPayload[];
 
 type FormDefinition = {
   title: string;
@@ -15,22 +19,33 @@ type FormDefinition = {
   items: FormDataItem[];
 };
 
+type FlowPhoto = {
+  name: string;
+  contentType: string;
+  contentBase64: string;
+};
+
+type SubmitValue = string | FlowPhoto[];
+
+type SubmitPayload = Record<string, SubmitValue> & {
+  formTitle: string;
+};
+
 export default function FormScreen() {
   const { formId } = useParams<{ formId: string }>();
   const initialForm: FormDefinition | undefined = FormData[formId ?? ""];
 
   const [form, setForm] = useState<FormDefinition | null>(null);
-
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null); // null = untouched
+  const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const [submitMessage, setSubmitMessage] = useState("");
 
   const autoResize = (el: HTMLTextAreaElement | null) => {
     if (el) {
-      el.style.height = "auto"; // Reset height
-      el.style.height = `${el.scrollHeight}px`; // Set to content height
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
     }
   };
 
@@ -40,12 +55,20 @@ export default function FormScreen() {
     const fallback = structuredClone(initialForm);
     const loaded = loadLocalStorage<FormDefinition>(`form-${formId}`, fallback);
 
-    setForm(loaded);
+    const merged: FormDefinition = {
+      ...fallback,
+      ...loaded,
+      items: fallback.items.map((freshItem) => {
+        const existing = loaded.items?.find((i) => i.id === freshItem.id);
+        return existing ? { ...freshItem, ...existing } : freshItem;
+      }),
+    };
+
+    setForm(merged);
   }, [formId, initialForm]);
 
   useEffect(() => {
     if (!form) return;
-
     for (const id in textareaRefs.current) {
       autoResize(textareaRefs.current[id]);
     }
@@ -76,23 +99,12 @@ export default function FormScreen() {
     );
   }
 
-  const handleChange = (id: string, value: string) => {
+  const handleChange = (id: string, value: FieldValue) => {
     setForm((current) =>
       produce(current as FormDefinition, (draft) => {
         const item = draft.items.find((i) => i.id === id);
         if (item) {
           item.value = value;
-
-          // Clear subItems if question10 is "No"
-          if (
-            item.id === "question10" &&
-            value.toLowerCase() === "no" &&
-            item.subItems
-          ) {
-            item.subItems.forEach((sub) => {
-              sub.value = "";
-            });
-          }
           return;
         }
 
@@ -116,58 +128,52 @@ export default function FormScreen() {
     setSubmitSuccess(null);
     setSubmitMessage("");
 
-    const payload: Record<string, string> = {
+    const payload: SubmitPayload = {
       formTitle: form.title,
     };
 
     for (const item of form.items) {
-      payload[item.id] = item.value.toString();
+      if (item.type === "files") {
+        const photos = (item.value as PhotoPayload[]) ?? [];
+        payload[item.id] = photos.map((p) => ({
+          name: p.name,
+          contentType: p.contentType,
+          contentBase64: p.dataUrl.split(",")[1] ?? "",
+        }));
+      } else {
+        payload[item.id] = item.value?.toString() ?? "";
+      }
+
       if (item.subItems) {
         for (const sub of item.subItems) {
-          payload[sub.id] = sub.value.toString();
+          payload[sub.id] = sub.value?.toString() ?? "";
         }
       }
     }
 
-    // 🔍 Log payload to console for testing
-    console.log("Submitting form payload:", payload);
-
     try {
       const res = await fetch(initialForm.submitUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
-      const data = await res.json(); // 👈 Parse JSON response
-      console.log("Response from Power Automate:", data); // 👈 Log response
 
       if (res.ok) {
         setSubmitSuccess(true);
         setSubmitMessage("Form submitted successfully.");
-        // Optional: clear local storage or reset form
         localStorage.removeItem(`form-${formId}`);
-        setForm(initialForm); // Reset to initial form state
+        setForm(initialForm);
       } else {
         setSubmitSuccess(false);
         setSubmitMessage("Submission failed. Please try again.");
       }
-    } catch (err) {
-      console.error("Error submitting form:", err);
+    } catch {
       setSubmitSuccess(false);
       setSubmitMessage("An error occurred during submission.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const question10Value = form.items
-    .find((item) => item.id === "question10")
-    ?.value?.toString()
-    .toLowerCase();
-  const disableSubItems = question10Value === "no";
 
   return (
     <div className="p-4 max-w-md mx-auto">
@@ -181,11 +187,19 @@ export default function FormScreen() {
               {item.label}
             </label>
 
-            {/* Main field rendering by type */}
             {(() => {
               switch (item.type) {
-                case "datetime":
+                case "files":
+                  return (
+                    <PhotosField
+                      storageKey={`form-${formId}-${item.id}`}
+                      value={(item.value as PhotoPayload[]) ?? []}
+                      onChange={(next) => handleChange(item.id, next)}
+                    />
+                  );
+
                 case "date":
+                case "datetime":
                   return (
                     <input
                       type={
@@ -201,8 +215,6 @@ export default function FormScreen() {
                   return (
                     <input
                       type="number"
-                      step="1"
-                      inputMode="numeric"
                       value={item.value.toString()}
                       onChange={(e) => handleChange(item.id, e.target.value)}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
@@ -230,9 +242,9 @@ export default function FormScreen() {
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                     >
                       <option value="">-- Select --</option>
-                      {item.options?.map((option: string) => (
-                        <option key={option} value={option}>
-                          {option}
+                      {item.options?.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
                         </option>
                       ))}
                     </select>
@@ -241,7 +253,7 @@ export default function FormScreen() {
                 default:
                   return (
                     <textarea
-                      ref={(el: HTMLTextAreaElement | null) => {
+                      ref={(el) => {
                         textareaRefs.current[item.id] = el;
                       }}
                       rows={1}
@@ -250,109 +262,11 @@ export default function FormScreen() {
                         handleChange(item.id, e.target.value);
                         autoResize(e.target);
                       }}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-y overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-y overflow-hidden"
                     />
                   );
               }
             })()}
-
-            {/* Sub-item fields */}
-            {item.subItems?.map((sub) => (
-              <div
-                key={sub.id}
-                className="mt-4 pl-4 border-l-2 border-gray-200"
-              >
-                <label className="block text-sm text-gray-700 mb-1">
-                  {sub.label}
-                </label>
-
-                {(() => {
-                  const commonClasses = `w-full border border-gray-300 rounded-md px-3 py-2 text-sm ${
-                    disableSubItems ? "bg-gray-100 text-gray-500" : ""
-                  }`;
-
-                  switch (sub.type) {
-                    case "datetime":
-                    case "date":
-                      return (
-                        <input
-                          type={
-                            sub.type === "datetime" ? "datetime-local" : "date"
-                          }
-                          value={sub.value.toString()}
-                          disabled={disableSubItems}
-                          onChange={(e) => handleChange(sub.id, e.target.value)}
-                          className={commonClasses}
-                        />
-                      );
-
-                    case "integer":
-                      return (
-                        <input
-                          type="number"
-                          step="1"
-                          value={sub.value.toString()}
-                          disabled={disableSubItems}
-                          onChange={(e) => handleChange(sub.id, e.target.value)}
-                          className={commonClasses}
-                        />
-                      );
-
-                    case "boolean":
-                      return (
-                        <select
-                          value={sub.value.toString()}
-                          disabled={disableSubItems}
-                          onChange={(e) => handleChange(sub.id, e.target.value)}
-                          className={commonClasses}
-                        >
-                          <option value="">Select Yes or No</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                      );
-
-                    case "select":
-                      return (
-                        <select
-                          value={sub.value.toString()}
-                          disabled={disableSubItems}
-                          onChange={(e) => handleChange(sub.id, e.target.value)}
-                          className={commonClasses}
-                        >
-                          <option value="">-- Select --</option>
-                          {sub.options?.map((option: string) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      );
-
-                    default:
-                      return (
-                        <textarea
-                          ref={(el: HTMLTextAreaElement | null) => {
-                            textareaRefs.current[sub.id] = el;
-                          }}
-                          rows={1}
-                          value={sub.value.toString()}
-                          disabled={disableSubItems}
-                          onChange={(e) => {
-                            handleChange(sub.id, e.target.value);
-                            autoResize(e.target);
-                          }}
-                          className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-y overflow-hidden ${
-                            disableSubItems
-                              ? "bg-gray-100 text-gray-500"
-                              : "focus:outline-none focus:ring-1 focus:ring-blue-400"
-                          }`}
-                        />
-                      );
-                  }
-                })()}
-              </div>
-            ))}
           </div>
         ))}
       </form>

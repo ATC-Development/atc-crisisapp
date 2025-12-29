@@ -1,26 +1,42 @@
-export type FieldType = "text" | "integer" | "date" | "datetime" | "boolean" | "select";
+export type FieldType =
+  | "text"
+  | "integer"
+  | "date"
+  | "datetime"
+  | "boolean"
+  | "select"
+  | "files";
+
+export type FilePayload = {
+  id: string;           // unique id for UI/removal
+  name: string;
+  contentType: string;  // image/jpeg
+  dataUrl: string;      // "data:image/jpeg;base64,...."
+};
 
 export type FormSubItem = {
   id: string;
   label: string;
-  value: string | number;
+  value: string | number | boolean | FilePayload[];
   type?: FieldType;
-  options?: string[]; // For select fields
+  options?: string[];
   required?: boolean;
 };
 
 export type FormDataItem = {
   id: string;
   label: string;
-  value: string | number;
+  value: string | number | boolean | FilePayload[];
   type?: FieldType;
-  options?: string[]; // For select fields
+  options?: string[];
   required?: boolean;
   subItems?: FormSubItem[];
 };
 
+
+
 export const LOCATION_OPTIONS = [
-  "901", "Augustan", "Barrington", "Forest Hills", "Hamilton Park", "Helena Springs", "MacArthur Park", "McHenry Square", "Sanctuary", "Sterlington", "The Sterling"];
+  "901", "Augustan", "Barrington", "Forest Hills", "Hamilton Park", "Helena Springs", "MacArthur Park", "McHenry Square", "Sanctuary", "Sterlington", "Sterling Place"];
 
 export const FormData: Record<
   string,
@@ -30,25 +46,11 @@ export const FormData: Record<
     items: FormDataItem[];
   }
 > = {
-  witness: {
-    title: "Witness Information",
-    submitUrl: "https://3094d1355179eae8b957f6027e079f.0f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c056ff16ee884afd96345604a052290a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vHwaMDnisXPL1aAXiY1Y-CEutP1NvEzSMEUssBy6NlU",
+  incident: {
+    title: "Incident Report Form",
+    submitUrl: "https://3094d1355179eae8b957f6027e079f.0f.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1f3e2f3f3c4b4d6eaed3f5e2a7c6b290/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=exampleSignature",
     items: [
-      {
-        id: "witnessName",
-        label: "Witness Name",
-        value: "",
-        type: "text",
-        required: true,
-      },
-      {
-        id: "date",
-        label: "Date",
-        value: "",
-        type: "date",
-        required: true,
-      },
-      {
+            {
         id: "location",
         label: "Location",
         value: "",
@@ -57,91 +59,41 @@ export const FormData: Record<
         required: true,
       },
       {
-        id: "question1",
-        label: "Who was injured (both Employee and others)?",
+        id: "injuredName",
+        label: "Name of Injured Person",
         value: "",
         type: "text",
         required: true,
       },
       {
-        id: "question2",
-        label: "How many injured?",
-        value: "",
-        type: "integer",
-        required: true,
-      },
-      {
-        id: "question3",
-        label: "Name(s) of injured:",
-        value: "",
-        type: "text",
-      },
-      {
-        id: "question4",
-        label: "What happened?",
+        id: "injuryNature",
+        label: "Nature of Injury",
         value: "",
         type: "text",
         required: true,
       },
       {
-        id: "question5",
-        label: "Did anyone witness the event? If so, who?",
+        id: "injuryBodyPart",
+        label: "Body Part Injured",
         value: "",
         type: "text",
-      },
-      {
-        id: "question6",
-        label: "When did it happen?",
-        value: "",
-        type: "datetime",
         required: true,
       },
       {
-        id: "question7",
-        label: "Weather conditions?",
+        id: "exposureType",
+        label: "Exposure Type (if applicable)",
         value: "",
         type: "text",
       },
       {
-        id: "question8",
-        label: "Preliminary opinion of why accident happened?",
-        value: "",
-        type: "text",
-      },
-      {
-        id: "question9",
-        label: "Evacuation plan needed / implemented?",
-        value: "",
-        type: "text",
-      },
-      {
-        id: "question10",
-        label: "ATC employee (supervisor level) to accompany injured worker(s) to local hospital?",
-        value: "",
-        type: "boolean",
-        required: true,
-        subItems: [
-          {
-            id: "atcEmployeeName",
-            label: "ATC Employee Name:",
-            value: "",
-            type: "text",
-          },
-          {
-            id: "injuredName",
-            label: "Injured name(s):",
-            value: "",
-            type: "text",
-          },
-          {
-            id: "hospitalName",
-            label: "Hospital Name:",
-            value: "",
-            type: "text",
-          },
-        ],
-      },
-    ],
-  },
+        id: "photos",
+        label: "Photos",
+        value: [],
+        type: "files",
+        required: false,
+      }
+
+    ]
+  }
 };
 

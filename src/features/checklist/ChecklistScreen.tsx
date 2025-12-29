@@ -183,10 +183,6 @@ export default function ChecklistScreen() {
 
         {/* Forms card */}
         <div className="card card-section">
-          <div className="font-semibold">Forms</div>
-          <div className="text-sm text-gray-600 mt-1">
-            Use the appropriate form for documentation and follow-up.
-          </div>
           <div className="mt-3">
             <FormSelector />
           </div>
