@@ -118,102 +118,107 @@ export default function ChecklistScreen() {
   }
 
   return (
-    <div className="app-page">
-      {/* Sticky header (full-width surface) */}
-      <div className="app-header">
-        <div className="app-header-inner">
-          <BackButton />
+    <div className="app-page app-shell">
+      <div className="app-scroll">
+        {/* Sticky header (inside scroll container) */}
+        <div className="app-header">
+          <div className="app-header-inner">
+            <BackButton />
 
-          <div className="mt-2">
-            <h1 className="text-xl font-bold">{checklist.title}</h1>
+            <div className="mt-2">
+              <h1 className="text-xl font-bold">{checklist.title}</h1>
 
-            <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
-              <span>
-                {done}/{total} complete
-                {remaining > 0 ? ` • ${remaining} remaining` : ""}
-              </span>
-              <span>{pct}%</span>
-            </div>
+              <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                <span>
+                  {done}/{total} complete
+                  {remaining > 0 ? ` • ${remaining} remaining` : ""}
+                </span>
+                <span>{pct}%</span>
+              </div>
 
-            <div className="mt-2 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-blue-600 transition-[width] duration-300"
-                style={{ width: `${pct}%` }}
-              />
+              <div className="mt-2 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 transition-[width] duration-300"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main content column */}
-      <div className="app-container">
-        {/* Checklist card */}
-        <div className="card overflow-hidden">
-          <ul className="divide-y divide-slate-200">
-            {orderedIndexes.map((index) => {
-              const item = checklist.items[index];
-              const checked = !!checkedItems[index];
+        {/* Main content column */}
+        <div className="app-container">
+          {/* Checklist card */}
+          <div className="card overflow-hidden">
+            <ul className="divide-y divide-slate-300">
+              {orderedIndexes.map((index) => {
+                const item = checklist.items[index];
+                const checked = !!checkedItems[index];
 
-              return (
-                <li key={index}>
-                  {/* Entire row toggles for mobile UX */}
-                  <button
-                    type="button"
-                    onClick={() => toggleCheckbox(index)}
-                    className={`checklist-row ${
-                      checked
-                        ? "checklist-row-complete"
-                        : "checklist-row-active"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      readOnly
-                      checked={checked}
-                      className="w-5 h-5 mt-1 pointer-events-none"
-                    />
+                return (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      onClick={() => toggleCheckbox(index)}
+                      className={`checklist-row ${
+                        checked
+                          ? "checklist-row-complete"
+                          : "checklist-row-active"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        readOnly
+                        checked={checked}
+                        className="w-5 h-5 mt-1 pointer-events-none"
+                      />
 
-                    <div className="flex-1 leading-relaxed">
-                      <div className={checked ? "line-through" : ""}>
-                        {renderItemContent(item)}
+                      <div className="flex-1 leading-relaxed">
+                        <div className={checked ? "line-through" : ""}>
+                          {renderItemContent(item)}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        {/* Forms card */}
-        <div className="card card-section">
-          <div className="font-semibold">Forms</div>
-          <div className="text-sm text-gray-600 mt-1">
-            Use the appropriate form for documentation and follow-up.
-          </div>
-          <div className="mt-3">
-            <FormSelector />
-          </div>
-        </div>
-
-        {/* Danger zone */}
-        <div className="danger-card">
-          <div className="text-sm font-semibold text-red-700">Danger zone</div>
-          <div className="text-sm text-red-700/80 mt-1">
-            Clears saved progress for this checklist on this device.
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
-          <button
-            onClick={() => {
-              if (category && window.confirm("Clear this checklist?")) {
-                clearChecklist(category);
-                window.location.reload();
-              }
-            }}
-            className="mt-3 w-full rounded-xl bg-red-50 border border-red-200 py-2 text-sm text-red-700"
-          >
-            Clear Checklist Progress
-          </button>
+          {/* Forms card */}
+          <div className="card card-section">
+            <div className="font-semibold">Forms</div>
+            <div className="text-sm text-gray-600 mt-1">
+              Use the appropriate form for documentation and follow-up.
+            </div>
+            <div className="mt-3">
+              <FormSelector />
+            </div>
+          </div>
+
+          {/* Danger zone */}
+          <div className="danger-card">
+            <div className="text-sm font-semibold text-red-700">
+              Danger zone
+            </div>
+            <div className="text-sm text-red-700/80 mt-1">
+              Clears saved progress for this checklist on this device.
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (category && window.confirm("Clear this checklist?")) {
+                  clearChecklist(category);
+                  // (optional) setCheckedItems(Array(checklist.items.length).fill(false));
+                  window.location.reload();
+                }
+              }}
+              className="mt-3 w-full rounded-xl bg-red-50 border border-red-200 py-2 text-sm text-red-700"
+            >
+              Clear Checklist Progress
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -12,9 +12,28 @@
     @apply max-w-md mx-auto px-4 py-4 space-y-4 pb-24;
   }
 
-  /* Sticky header */
-  .app-header {
-    @apply sticky top-0 z-10 bg-white/95 border-b border-slate-300;
+  @layer components {
+    /* App shell: prevents body scroll + iOS pull-to-refresh weirdness */
+    .app-shell {
+      @apply h-[100dvh] overflow-hidden;
+    }
+
+    /* Scroll area inside the shell */
+    .app-scroll {
+      @apply h-full overflow-y-auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    /* If you still use app-page for background */
+    .app-page {
+      @apply bg-slate-200;
+    }
+
+    /* Header stays at top of the scroll area (stable) */
+    .app-header {
+      @apply sticky top-0 z-10 bg-white border-b border-slate-300;
+    }
   }
 
   .app-header-inner {
