@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-// import logo from "../../assets/ATC Logo_1.jpg";
+import logo from "../../assets/ATC_Office.jpg";
 import poolPic from "../../assets/Augustan_Pool.jpg";
 import { clearAppLocalStorage } from "../utils/localStorageHelpers";
 
@@ -34,7 +34,7 @@ export default function CategoriesScreen() {
       {/* Background Image Layer with Opacity */}
       <div
         className="absolute inset-0 bg-no-repeat bg-top bg-contain opacity-90 z-0"
-        style={{ backgroundImage: `url(${poolPic})`, backgroundSize: "cover" }}
+        style={{ backgroundImage: `url(${logo})`, backgroundSize: "cover" }}
       />
 
       {/* Foreground Content */}
