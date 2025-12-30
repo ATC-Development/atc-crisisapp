@@ -152,6 +152,11 @@ export default function FormScreen() {
     }
 
     try {
+      console.log(
+        "🚀 Incident Form Payload:",
+        JSON.stringify(payload, null, 2)
+      );
+
       const res = await fetch(initialForm.submitUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
