@@ -7,6 +7,19 @@ import "./index.css";
 import App from "./App.tsx";
 import "./styles/ui.css"; // 👈 Import UI styles globally
 
+// 👇 ADD THIS
+import { registerSW } from "virtual:pwa-register";
+
+registerSW({
+  onOfflineReady() {
+    console.log("ATC Crisis App is ready to work offline");
+  },
+  onNeedRefresh() {
+    console.log("New version available; refresh to update");
+    // Later we can tie this to your version_check UX if you want
+  },
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
