@@ -48,7 +48,9 @@ export function PhotosField({
 
   const addPhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const payloads = await Promise.all(Array.from(files).map(toPhotoPayload));
+    const payloads = await Promise.all(
+      Array.from(files).map((file, index) => toPhotoPayload(file, index))
+    );
     persist([...(value ?? []), ...payloads]);
   };
 

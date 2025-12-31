@@ -71,7 +71,7 @@ export default function CategoriesScreen() {
           </button>
         </div>
 
-        <div className="text-xs w-3/5 flex flex-col justify-end text-right">
+        <div className="text-blue-500 text-xs w-3/5 flex flex-col justify-end text-right">
           <p>© 2025 Crisis Management App</p>
           <p className="text-xs">Developed by ATC Team</p>
           <p className="text-xs">v{__APP_VERSION__}</p> {/* 👈 Add this line */}
