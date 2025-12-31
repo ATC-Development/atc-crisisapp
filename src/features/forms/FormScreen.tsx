@@ -67,12 +67,12 @@ export default function FormScreen() {
     setForm(merged);
   }, [formId, initialForm]);
 
-  useEffect(() => {
-    if (!form) return;
-    for (const id in textareaRefs.current) {
-      autoResize(textareaRefs.current[id]);
-    }
-  }, [form]);
+  // useEffect(() => {
+  //   if (!form) return;
+  //   for (const id in textareaRefs.current) {
+  //     autoResize(textareaRefs.current[id]);
+  //   }
+  // }, [form]);
 
   useEffect(() => {
     if (form) {
