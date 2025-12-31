@@ -7,17 +7,24 @@ export type PhotoPayload = {
   dataUrl: string; // data:image/...;base64,...
 };
 
-function toPhotoPayload(file: File): Promise<PhotoPayload> {
+function toPhotoPayload(file: File, index: number): Promise<PhotoPayload> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+
     reader.onload = () => {
+      const extension =
+        file.name?.split(".").pop() || file.type.split("/").pop() || "jpg";
+
+      const timestamp = Date.now();
+
       resolve({
         id: crypto.randomUUID(),
-        name: file.name || `photo-${Date.now()}.jpg`,
+        name: `photo-${timestamp}-${index + 1}.${extension}`,
         contentType: file.type || "image/jpeg",
         dataUrl: String(reader.result),
       });
     };
+
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
