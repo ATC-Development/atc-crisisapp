@@ -7,7 +7,6 @@ import "./index.css";
 import App from "./App.tsx";
 import "./styles/ui.css"; // 👈 Import UI styles globally
 
-// 👇 ADD THIS
 import { registerSW } from "virtual:pwa-register";
 
 registerSW({
@@ -16,12 +15,22 @@ registerSW({
   },
   onNeedRefresh() {
     console.log("New version available; refresh to update");
-    // Later we can tie this to your version_check UX if you want
   },
 });
 
+// ✅ ADD THESE TWO IMPORTS
+import { PublicClientApplication } from "@azure/msal-browser";
+import { MsalProvider } from "@azure/msal-react";
+import { msalConfig } from "./auth/msalConfig";
+
+// ✅ CREATE INSTANCE
+const msalInstance = new PublicClientApplication(msalConfig);
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    {/* ✅ WRAP APP */}
+    <MsalProvider instance={msalInstance}>
+      <App />
+    </MsalProvider>
   </StrictMode>
 );

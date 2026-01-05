@@ -59,13 +59,6 @@ export const FormData: Record<
         required: true,
       },
       {
-        id: "witness",
-        label: "Employee Witnessing Incident",
-        value: "",
-        type: "text",
-        required: true,
-      },
-      {
         id: "injuredName",
         label: "Name of Injured Person",
         value: "",

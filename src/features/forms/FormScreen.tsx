@@ -10,8 +10,13 @@ import {
 } from "../utils/localStorageHelpers";
 import { PhotosField } from "./fields/photosField";
 import type { PhotoPayload } from "./fields/photosField";
+import { useMsal } from "@azure/msal-react";
 
 type FieldValue = string | number | boolean | PhotoPayload[];
+
+type IdTokenClaims = {
+  preferred_username?: string;
+};
 
 type FormDefinition = {
   title: string;
@@ -29,6 +34,8 @@ type SubmitValue = string | FlowPhoto[];
 
 type SubmitPayload = Record<string, SubmitValue> & {
   formTitle: string;
+  submittedByName: string;
+  submittedByEmail: string;
 };
 
 export default function FormScreen() {
@@ -41,6 +48,26 @@ export default function FormScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const [submitMessage, setSubmitMessage] = useState("");
+
+  const [invalidIds, setInvalidIds] = useState<Set<string>>(new Set());
+
+  const { accounts } = useMsal();
+  const account = accounts[0];
+  const isSignedIn = !!account;
+
+  const submittedByName = account?.name ?? "";
+  const claims = account?.idTokenClaims as IdTokenClaims | undefined;
+  const submittedByEmail =
+    account?.username || claims?.preferred_username || "";
+
+  const isEmptyValue = (val: unknown, type?: string) => {
+    if (type === "files") return !Array.isArray(val) || val.length === 0;
+    if (typeof val === "string") return val.trim() === "";
+    if (typeof val === "number") return Number.isNaN(val);
+    // boolean is "filled" once chosen; in your UI, "boolean" is actually a select returning string
+    if (typeof val === "boolean") return false;
+    return val === null || val === undefined || val === "";
+  };
 
   const autoResize = (el: HTMLTextAreaElement | null) => {
     if (el) {
@@ -100,6 +127,14 @@ export default function FormScreen() {
   }
 
   const handleChange = (id: string, value: FieldValue) => {
+    // Clear invalid marker as user fixes fields
+    setInvalidIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+
     setForm((current) =>
       produce(current as FormDefinition, (draft) => {
         const item = draft.items.find((i) => i.id === id);
@@ -124,12 +159,57 @@ export default function FormScreen() {
   const handleSubmit = async () => {
     if (!form) return;
 
+    // Ensure template exists (TypeScript + safety)
+    if (!initialForm) {
+      setSubmitSuccess(false);
+      setSubmitMessage("Form configuration missing.");
+      return;
+    }
+
+    // Must be signed in to submit
+    if (!isSignedIn) {
+      setSubmitSuccess(false);
+      setSubmitMessage("Please sign in with Microsoft to submit this form.");
+      return;
+    }
+
+    // Validate required fields
+    setInvalidIds(new Set());
+    const missing: { id: string; label: string }[] = [];
+
+    for (const item of form.items) {
+      if (item.required && isEmptyValue(item.value, item.type)) {
+        missing.push({ id: item.id, label: item.label });
+      }
+
+      if (item.subItems) {
+        for (const sub of item.subItems) {
+          if (sub.required && isEmptyValue(sub.value, sub.type)) {
+            missing.push({ id: sub.id, label: sub.label });
+          }
+        }
+      }
+    }
+
+    if (missing.length > 0) {
+      setInvalidIds(new Set(missing.map((m) => m.id)));
+      setSubmitSuccess(false);
+      setSubmitMessage(
+        `Please fill out required fields: ${missing
+          .map((m) => m.label)
+          .join(", ")}`
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitSuccess(null);
     setSubmitMessage("");
 
     const payload: SubmitPayload = {
       formTitle: form.title,
+      submittedByName,
+      submittedByEmail,
     };
 
     for (const item of form.items) {
@@ -141,12 +221,12 @@ export default function FormScreen() {
           contentBase64: p.dataUrl.split(",")[1] ?? "",
         }));
       } else {
-        payload[item.id] = item.value?.toString() ?? "";
+        payload[item.id] = String(item.value ?? "");
       }
 
       if (item.subItems) {
         for (const sub of item.subItems) {
-          payload[sub.id] = sub.value?.toString() ?? "";
+          payload[sub.id] = String(sub.value ?? "");
         }
       }
     }
@@ -167,7 +247,7 @@ export default function FormScreen() {
         setSubmitSuccess(true);
         setSubmitMessage("Form submitted successfully.");
         localStorage.removeItem(`form-${formId}`);
-        setForm(initialForm);
+        setForm(structuredClone(initialForm));
       } else {
         setSubmitSuccess(false);
         setSubmitMessage("Submission failed. Please try again.");
@@ -186,106 +266,122 @@ export default function FormScreen() {
       <h1 className="text-2xl font-bold mb-6 text-center">{form.title}</h1>
 
       <form className="space-y-4">
-        {form.items.map((item) => (
-          <div key={item.id} className="bg-gray-100 shadow rounded-lg p-4">
-            <label className="block text-gray-800 font-medium mb-2">
-              {item.label}
-            </label>
+        {form.items.map((item) => {
+          const isInvalid = invalidIds.has(item.id);
+          const fieldClass = `w-full border rounded-md px-3 py-2 text-sm ${
+            isInvalid ? "border-red-500" : "border-gray-300"
+          }`;
 
-            {(() => {
-              switch (item.type) {
-                case "files":
-                  return (
-                    <PhotosField
-                      storageKey={`form-${formId}-${item.id}`}
-                      value={(item.value as PhotoPayload[]) ?? []}
-                      onChange={(next) => handleChange(item.id, next)}
-                    />
-                  );
+          return (
+            <div key={item.id} className="bg-gray-100 shadow rounded-lg p-4">
+              <label className="block text-gray-800 font-medium mb-2">
+                {item.label}
+                {item.required ? (
+                  <span className="text-red-500"> *</span>
+                ) : null}
+              </label>
 
-                case "date":
-                case "datetime":
-                  return (
-                    <input
-                      type={
-                        item.type === "datetime" ? "datetime-local" : "date"
-                      }
-                      value={item.value.toString()}
-                      onChange={(e) => handleChange(item.id, e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    />
-                  );
+              {(() => {
+                switch (item.type) {
+                  case "files":
+                    return (
+                      <PhotosField
+                        storageKey={`form-${formId}-${item.id}`}
+                        value={(item.value as PhotoPayload[]) ?? []}
+                        onChange={(next) => handleChange(item.id, next)}
+                      />
+                    );
 
-                case "integer":
-                  return (
-                    <input
-                      type="number"
-                      value={item.value.toString()}
-                      onChange={(e) => handleChange(item.id, e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    />
-                  );
+                  case "date":
+                  case "datetime":
+                    return (
+                      <input
+                        type={
+                          item.type === "datetime" ? "datetime-local" : "date"
+                        }
+                        value={String(item.value ?? "")}
+                        onChange={(e) => handleChange(item.id, e.target.value)}
+                        className={fieldClass}
+                      />
+                    );
 
-                case "boolean":
-                  return (
-                    <select
-                      value={item.value.toString()}
-                      onChange={(e) => handleChange(item.id, e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    >
-                      <option value="">Select Yes or No</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  );
+                  case "integer":
+                    return (
+                      <input
+                        type="number"
+                        value={String(item.value ?? "")}
+                        onChange={(e) => handleChange(item.id, e.target.value)}
+                        className={fieldClass}
+                      />
+                    );
 
-                case "select":
-                  return (
-                    <select
-                      value={item.value.toString()}
-                      onChange={(e) => handleChange(item.id, e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    >
-                      <option value="">-- Select --</option>
-                      {item.options?.map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                  );
+                  case "boolean":
+                    return (
+                      <select
+                        value={String(item.value ?? "")}
+                        onChange={(e) => handleChange(item.id, e.target.value)}
+                        className={fieldClass}
+                      >
+                        <option value="">Select Yes or No</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    );
 
-                default:
-                  return (
-                    <textarea
-                      ref={(el) => {
-                        textareaRefs.current[item.id] = el;
-                      }}
-                      rows={1}
-                      value={item.value.toString()}
-                      onChange={(e) => {
-                        handleChange(item.id, e.target.value);
-                        autoResize(e.target);
-                      }}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-y overflow-hidden"
-                    />
-                  );
-              }
-            })()}
-          </div>
-        ))}
+                  case "select":
+                    return (
+                      <select
+                        value={String(item.value ?? "")}
+                        onChange={(e) => handleChange(item.id, e.target.value)}
+                        className={fieldClass}
+                      >
+                        <option value="">-- Select --</option>
+                        {item.options?.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    );
+
+                  default:
+                    return (
+                      <textarea
+                        ref={(el) => {
+                          textareaRefs.current[item.id] = el;
+                        }}
+                        rows={1}
+                        value={String(item.value ?? "")}
+                        onChange={(e) => {
+                          handleChange(item.id, e.target.value);
+                          autoResize(e.target);
+                        }}
+                        className={`${fieldClass} resize-y overflow-hidden`}
+                      />
+                    );
+                }
+              })()}
+            </div>
+          );
+        })}
       </form>
 
       <div className="mt-6 text-center">
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !isSignedIn}
           className={`bg-blue-600 text-white px-6 py-2 rounded-lg shadow transition ${
-            isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            isSubmitting || !isSignedIn
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:bg-blue-700"
           }`}
         >
-          {isSubmitting ? "Submitting..." : "Submit"}
+          {!isSignedIn
+            ? "Sign in to submit"
+            : isSubmitting
+            ? "Submitting..."
+            : "Submit"}
         </button>
       </div>
 
