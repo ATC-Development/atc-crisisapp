@@ -4,13 +4,15 @@ import { LogLevel, type Configuration } from "@azure/msal-browser";
 const clientId = import.meta.env.VITE_AAD_CLIENT_ID as string;
 const tenantId = import.meta.env.VITE_AAD_TENANT_ID as string;
 
+const appRoot = `${window.location.origin}${import.meta.env.BASE_URL}`;
+
 export const msalConfig: Configuration = {
   auth: {
     // TODO: replace with your Entra App Registration values
     clientId,
     authority: `https://login.microsoftonline.com/${tenantId}`,
-    redirectUri: `${window.location.origin}${window.location.pathname}`,
-    postLogoutRedirectUri: `${window.location.origin}${window.location.pathname}`,
+    redirectUri: appRoot,
+    postLogoutRedirectUri: appRoot,
     navigateToLoginRequestUrl: false,
   },
   cache: {

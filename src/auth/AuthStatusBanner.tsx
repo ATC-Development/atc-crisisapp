@@ -11,9 +11,12 @@ export default function AuthStatusBanner() {
 
   const handleLogout = async () => {
     if (!account) return;
+
+    const appRoot = `${window.location.origin}${import.meta.env.BASE_URL}`;
+
     await instance.logoutRedirect({
       account,
-      postLogoutRedirectUri: window.location.origin,
+      postLogoutRedirectUri: appRoot,
     });
   };
 

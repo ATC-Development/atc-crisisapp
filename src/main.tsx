@@ -15,7 +15,12 @@ import { msalConfig } from "./auth/msalConfig";
 
 const msalInstance = new PublicClientApplication(msalConfig);
 
-// ✅ Capture the updater function
+// Helper: always poke SW, then do version check (apply if mismatch)
+const runUpdateChecks = (updateSW: (reloadPage?: boolean) => Promise<void>) => {
+  void updateSW(false); // ask SW to check (no reload)
+  checkAppVersion({ onUpdateNeeded: () => void updateSW(true) }); // apply + reload if mismatch
+};
+
 const updateSW = registerSW({
   immediate: true,
   onOfflineReady() {
@@ -23,31 +28,25 @@ const updateSW = registerSW({
   },
   onNeedRefresh() {
     console.log("New version available (SW). Applying update...");
-    // ✅ This forces the waiting SW to activate and reload
     void updateSW(true);
+  },
+
+  // ✅ Key change: only run initial checks once SW is actually registered
+  onRegistered() {
+    runUpdateChecks(updateSW);
   },
 });
 
-// 👇 OPTIONAL but recommended: poke SW on startup (no reload)
-void updateSW(false);
+// ✅ Also re-check on common “app is active again” signals
+window.addEventListener("online", () => runUpdateChecks(updateSW));
 
-// ✅ Version check should only *attempt* when reachable.
-// Pass a callback that applies the SW update + reload.
-checkAppVersion({
-  onUpdateNeeded: () => void updateSW(true),
-});
+// iOS PWA sometimes behaves better with these than visibilitychange alone
+window.addEventListener("focus", () => runUpdateChecks(updateSW));
+window.addEventListener("pageshow", () => runUpdateChecks(updateSW));
 
-// ✅ Re-check when connectivity returns
-window.addEventListener("online", () => {
-  void updateSW(false); // 👈 poke SW to check for new version
-  checkAppVersion({ onUpdateNeeded: () => void updateSW(true) });
-});
-
-// ✅ Re-check when app becomes visible (iOS-friendly)
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
-    void updateSW(false); // 👈 poke SW to check for new version
-    checkAppVersion({ onUpdateNeeded: () => void updateSW(true) });
+    runUpdateChecks(updateSW);
   }
 });
 
