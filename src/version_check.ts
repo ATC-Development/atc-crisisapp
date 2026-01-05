@@ -1,17 +1,50 @@
-const APP_VERSION = __APP_VERSION__;
+type VersionCheckOptions = {
+  onUpdateNeeded?: () => void;
+  timeoutMs?: number;
+};
 
-export function checkAppVersion() {
-  const storedVersion = localStorage.getItem('appVersion');
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error("version check timeout")), timeoutMs);
+    promise
+      .then((v) => {
+        clearTimeout(t);
+        resolve(v);
+      })
+      .catch((e) => {
+        clearTimeout(t);
+        reject(e);
+      });
+  });
+}
 
-  if (storedVersion && storedVersion !== APP_VERSION) {
-    localStorage.setItem('appVersion', APP_VERSION);
+export async function checkAppVersion(opts: VersionCheckOptions = {}) {
+  const { onUpdateNeeded, timeoutMs = 2500 } = opts;
 
-    if (!sessionStorage.getItem('justReloaded')) {
-      sessionStorage.setItem('justReloaded', 'true');
-      window.location.reload();
+  // If browser thinks it’s offline, don’t even try.
+  if (typeof navigator !== "undefined" && !navigator.onLine) return;
+
+  try {
+    const res = await withTimeout(
+      fetch("/version.json", { cache: "no-store" }),
+      timeoutMs
+    );
+
+    if (!res.ok) return;
+
+    const data = (await res.json()) as { version?: string };
+    const remote = data?.version;
+    const local = __APP_VERSION__;
+
+    if (!remote || !local) return;
+
+    if (remote !== local) {
+      console.log(`Version mismatch. Local=${local}, Remote=${remote}`);
+      onUpdateNeeded?.();
     }
-  } else {
-    localStorage.setItem('appVersion', APP_VERSION);
-    sessionStorage.removeItem('justReloaded');
+  } catch {
+    // Offline / captive portal / slow network / DNS issues:
+    // do nothing so app continues working.
+    return;
   }
 }
