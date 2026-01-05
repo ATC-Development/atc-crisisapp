@@ -1,7 +1,7 @@
 {
   "name": "atc-crisisapp",
   "private": true,
-  "version": "0.0.21",
+  "version": "0.0.22",
   "homepage": "https://atc-development.github.io/atc-crisisapp/",
   "type": "module",
   "scripts": {
