@@ -1,22 +1,18 @@
 {
   "name": "atc-crisisapp",
   "private": true,
-  "version": "0.0.18",
+  "version": "0.0.19",
   "homepage": "https://atc-development.github.io/atc-crisisapp/",
   "type": "module",
-"scripts": {
-  "dev": "vite",
-
-  "prebuild": "node scripts/write-version.cjs",
-  "build": "tsc -b && vite build",
-
-  "lint": "eslint .",
-  "preview": "vite preview",
-
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d dist"
-}
-,
+  "scripts": {
+    "dev": "vite",
+    "prebuild": "node scripts/write-version.cjs",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
   "dependencies": {
     "@azure/msal-browser": "^4.27.0",
     "@azure/msal-react": "^3.0.23",
