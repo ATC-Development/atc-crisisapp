@@ -25,8 +25,10 @@ export async function checkAppVersion(opts: VersionCheckOptions = {}) {
   if (typeof navigator !== "undefined" && !navigator.onLine) return;
 
   try {
+    const url = `${import.meta.env.BASE_URL}version.json?t=${Date.now()}`;
+
     const res = await withTimeout(
-      fetch("/version.json", { cache: "no-store" }),
+      fetch(url, { cache: "no-store" }),
       timeoutMs
     );
 

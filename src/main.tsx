@@ -28,18 +28,25 @@ const updateSW = registerSW({
   },
 });
 
+// 👇 OPTIONAL but recommended: poke SW on startup (no reload)
+void updateSW(false);
+
 // ✅ Version check should only *attempt* when reachable.
 // Pass a callback that applies the SW update + reload.
 checkAppVersion({
   onUpdateNeeded: () => void updateSW(true),
 });
 
-// Optional: re-check when connectivity returns / app becomes visible
+// ✅ Re-check when connectivity returns
 window.addEventListener("online", () => {
+  void updateSW(false); // 👈 poke SW to check for new version
   checkAppVersion({ onUpdateNeeded: () => void updateSW(true) });
 });
+
+// ✅ Re-check when app becomes visible (iOS-friendly)
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
+    void updateSW(false); // 👈 poke SW to check for new version
     checkAppVersion({ onUpdateNeeded: () => void updateSW(true) });
   }
 });
