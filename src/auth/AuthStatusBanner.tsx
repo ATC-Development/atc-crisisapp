@@ -22,9 +22,15 @@ export default function AuthStatusBanner() {
 
   // Compact floating pill (doesn't consume layout space)
   return (
-    <div className="fixed right-3 top-3 z-50">
+    <div
+      className="fixed z-50"
+      style={{
+        top: "calc(env(safe-area-inset-top, 0px) + 6px)",
+        left: "10px",
+      }}
+    >
       {account ? (
-        <div className="flex items-center gap-2 rounded-full border border-white/30 bg-black/55 px-3 py-2 text-xs text-white shadow-lg backdrop-blur">
+        <div className="flex items-center gap-2 rounded-full border border-white/30 bg-black/25 px-3 py-2 text-xs text-white shadow-lg backdrop-blur">
           <div className="max-w-[160px] truncate">{account.name}</div>
 
           <button

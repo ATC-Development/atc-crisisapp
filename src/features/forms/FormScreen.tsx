@@ -261,11 +261,11 @@ export default function FormScreen() {
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto">
+    <div className="p-4 pt-12 max-w-md mx-auto">
       <BackButton />
       <h1 className="text-2xl font-bold mb-6 text-center">{form.title}</h1>
 
-      <form className="space-y-4">
+      <form className="space-y-2">
         {form.items.map((item) => {
           const isInvalid = invalidIds.has(item.id);
           const fieldClass = `w-full border rounded-md px-3 py-2 text-sm ${
