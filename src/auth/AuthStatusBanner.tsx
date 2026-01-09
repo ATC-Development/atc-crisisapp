@@ -55,50 +55,51 @@ export default function AuthStatusBanner() {
       style={{
         top: "calc(env(safe-area-inset-top, 0px) + 6px)",
         left: "10px",
-        right: "10px", // allow expansion to the right edge on small screens
+        right: "10px",
       }}
     >
-      {account ? (
-        <div className="inline-flex max-w-full items-start gap-3 rounded-2xl border border-white/30 bg-black/25 px-3 py-2 text-xs text-white shadow-lg backdrop-blur">
-          {/* Text block */}
-          <div className="min-w-0 flex-1">
-            <div className="max-w-full truncate font-medium">
-              {account.name}
-            </div>
-
-            {/* Wrap instead of truncate */}
-            <div className="mt-0.5 max-w-full text-[11px] leading-snug text-white/80 whitespace-normal break-words">
-              {proximityText}
-            </div>
-
-            {/* Optional: tiny enable button under the text (stays neat when wrapping) */}
-            {loc.state !== "ok" && (
-              <button
-                onClick={refreshLoc}
-                className="mt-1 inline-flex rounded-full bg-white/10 px-2 py-[2px] text-[10px] text-white/80 hover:bg-white/20"
-                title="Enable or retry location"
-              >
-                Enable
-              </button>
-            )}
+      <div className="inline-flex max-w-full items-start gap-3 rounded-2xl border border-white/30 bg-black/25 px-3 py-2 text-xs text-white shadow-lg backdrop-blur">
+        {/* Text block */}
+        <div className="min-w-0 flex-1">
+          {/* Top line: account name OR signed-out label */}
+          <div className="max-w-full truncate font-medium">
+            {account ? account.name : "Not signed in"}
           </div>
 
-          {/* Action button */}
+          {/* Always show proximity */}
+          <div className="mt-0.5 max-w-full text-[11px] leading-snug text-white/80 whitespace-normal break-words">
+            {proximityText}
+          </div>
+
+          {/* Optional: enable/retry location */}
+          {loc.state !== "ok" && (
+            <button
+              onClick={refreshLoc}
+              className="mt-1 inline-flex rounded-full bg-white/10 px-2 py-[2px] text-[10px] text-white/80 hover:bg-white/20"
+              title="Enable or retry location"
+            >
+              Enable
+            </button>
+          )}
+        </div>
+
+        {/* Action button: Sign out OR Sign in */}
+        {account ? (
           <button
             onClick={handleLogout}
             className="shrink-0 rounded-full bg-white/15 px-2 py-1 hover:bg-white/25"
           >
             Sign out
           </button>
-        </div>
-      ) : (
-        <button
-          onClick={handleLogin}
-          className="rounded-full border border-white/30 bg-black/55 px-3 py-2 text-xs text-white shadow-lg backdrop-blur hover:bg-black/65"
-        >
-          Sign in
-        </button>
-      )}
+        ) : (
+          <button
+            onClick={handleLogin}
+            className="shrink-0 rounded-full bg-white/15 px-2 py-1 hover:bg-white/25"
+          >
+            Sign in
+          </button>
+        )}
+      </div>
     </div>
   );
 }
