@@ -1,0 +1,82 @@
+{
+  "defaultRadiusMeters": 300,
+  "properties": [
+    {
+      "code": "901",
+      "name": "ATC Office",
+      "address": "901 Greene Street, Augusta, GA 30901",
+      "lat": 33.47463278372618,
+      "lon": -81.96857335167276
+    },
+    {
+      "code": "aug",
+      "name": "The Augustan",
+      "address": "1150 Greene Street, Augusta, GA 30901",
+      "lat": 33.47557910734403,
+      "lon": -81.9735997312839
+    },
+    {
+      "code": "ba",
+      "name": "Barrington",
+      "address": "101 Bevington Court, Greenwood, SC 29649",
+      "lat": 34.23623114847439,
+      "lon": -82.15954810427807
+    },
+    {
+      "code": "fh",
+      "name": "Forest Hills",
+      "address": "934 Courtside Dr, Augusta, GA 30909",
+      "lat": 33.47787064963463,
+      "lon": -82.06864260429948
+    },
+    {
+      "code": "ham",
+      "name": "Hamilton Park",
+      "address": "101 Hamilton Park Circle, Greenwood, SC 29649",
+      "lat": 34.2137905027597,
+      "lon": -82.20562353164912
+    },
+    {
+      "code": "hs",
+      "name": "Helena Springs",
+      "address": "3401 Helena Springs Lane, Augusta, GA 30909",
+      "lat": 33.476156582333275,
+      "lon": -82.10438346907465
+    },
+    {
+      "code": "mac",
+      "name": "MacArthur Park",
+      "address": "101 Little Rock Drive, Augusta, GA 30909",
+      "lat": 33.44566364837666,
+      "lon": -82.0839639295847
+    },
+    {
+      "code": "ms",
+      "name": "McHenry Square",
+      "address": "2000 McHenry Street, Augusta, GA 30909",
+      "lat": 33.450047464652286,
+      "lon": -82.11524976197217
+    },
+    {
+      "code": "sa",
+      "name": "Sanctuary Apartments",
+      "address": "5000 Sanctuary Apartments, Augusta, GA 30909",
+      "lat": 33.4774609567432,
+      "lon": -82.09786860429949
+    },
+    {
+      "code": "st",
+      "name": "Sterlington",
+      "address": "4105 Sterlington Drive, Grovetown, GA 30813",
+      "lat": 33.443814074557494,
+      "lon": -82.1896888736128
+    },
+    {
+      "code": "va",
+      "name": "Vista Apartments",
+      "address": "4027 Charming Vista Drive, Warrenville, SC 29851",
+      "lat": 33.5204568020608,
+      "lon": -81.85474162361069
+    }
+  ]
+}

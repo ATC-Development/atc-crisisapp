@@ -1,3 +1,5 @@
+import propertyLocations from "../../data/propertyLocations.json";
+
 export type FieldType =
   | "text"
   | "integer"
@@ -33,10 +35,24 @@ export type FormDataItem = {
   subItems?: FormSubItem[];
 };
 
+type PropertyLocation = {
+  code: string;
+  name: string;
+  address: string;
+  lat: number;
+  lon: number;
+};
 
+type PropertyLocationsFile = {
+  defaultRadiusMeters: number;
+  properties: PropertyLocation[];
+};
 
-export const LOCATION_OPTIONS = [
-  "901", "Augustan", "Barrington", "Forest Hills", "Hamilton Park", "Helena Springs", "MacArthur Park", "McHenry Square", "Sanctuary", "Sterlington", "Sterling Place"];
+const locations = propertyLocations as PropertyLocationsFile;
+
+export const LOCATION_OPTIONS = locations.properties.map(
+  (p) => p.name
+);
 
 export const FormData: Record<
   string,

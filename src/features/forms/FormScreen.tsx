@@ -11,6 +11,7 @@ import {
 import { PhotosField } from "./fields/photosField";
 import type { PhotoPayload } from "./fields/photosField";
 import { useMsal } from "@azure/msal-react";
+import { useProximityLocation } from "../../hooks/useProximityLocation";
 
 type FieldValue = string | number | boolean | PhotoPayload[];
 
@@ -50,6 +51,9 @@ export default function FormScreen() {
   const [submitMessage, setSubmitMessage] = useState("");
 
   const [invalidIds, setInvalidIds] = useState<Set<string>>(new Set());
+
+  const { status: loc } = useProximityLocation({ refreshMs: 10 * 60 * 1000 });
+  const didAutoSetLocation = useRef(false);
 
   const { accounts } = useMsal();
   const account = accounts[0];
@@ -93,6 +97,48 @@ export default function FormScreen() {
 
     setForm(merged);
   }, [formId, initialForm]);
+
+  useEffect(() => {
+    if (!form) return;
+
+    // Only attempt once per form load
+    if (didAutoSetLocation.current) return;
+
+    // Only if GPS is good + within a property's radius
+    if (loc.state !== "ok" || !loc.nearest || !loc.nearest.withinRadius) return;
+
+    // Find the "location" field in the form definition
+    const locationItem = form.items.find((i) => i.id === "location");
+    if (!locationItem) {
+      didAutoSetLocation.current = true; // prevent repeated scanning
+      return;
+    }
+
+    // Do NOT overwrite anything already set (localStorage restored or user selected)
+    const currentValue = String(locationItem.value ?? "").trim();
+    if (currentValue) {
+      didAutoSetLocation.current = true;
+      return;
+    }
+
+    // Ensure the GPS-derived name is one of the allowed options (prevents mismatches)
+    const gpsName = loc.nearest.name;
+    const allowed = (locationItem.options ?? []).includes(gpsName);
+    if (!allowed) {
+      didAutoSetLocation.current = true;
+      return;
+    }
+
+    didAutoSetLocation.current = true;
+
+    // Set location to the property NAME
+    setForm((current) =>
+      produce(current as FormDefinition, (draft) => {
+        const item = draft.items.find((i) => i.id === "location");
+        if (item) item.value = gpsName;
+      })
+    );
+  }, [form, loc]);
 
   useEffect(() => {
     if (!form) return;
