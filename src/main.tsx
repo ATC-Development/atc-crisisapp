@@ -15,6 +15,9 @@ import { msalConfig } from "./auth/msalConfig";
 
 const msalInstance = new PublicClientApplication(msalConfig);
 
+let lastAlertedVersion: string | null = null;
+let lastWaitingState = false;
+
 /** Force the browser to re-check the service worker script right now. */
 async function forceServiceWorkerUpdateCheck() {
   if (!("serviceWorker" in navigator)) return;
@@ -30,31 +33,41 @@ async function forceServiceWorkerUpdateCheck() {
 const runUpdateChecks = async (
   updateSW: (reloadPage?: boolean) => Promise<void>
 ) => {
-  // 1) Force an actual SW update check at the browser level
   await forceServiceWorkerUpdateCheck();
 
   if ("serviceWorker" in navigator) {
     const reg = await navigator.serviceWorker.getRegistration();
 
-    const swState = {
-      hasReg: !!reg,
-      installing: reg?.installing?.state ?? null,
-      waiting: reg?.waiting?.state ?? null,
-      active: reg?.active?.state ?? null,
-    };
+    const hasWaiting = !!reg?.waiting;
+    const localVersion = __APP_VERSION__;
 
-    // 🖥 Console (desktop / remote debug)
-    console.log("SW state:", swState);
+    // 🔎 Always log when state changes (console only)
+    if (hasWaiting !== lastWaitingState) {
+      console.log("SW waiting state changed:", {
+        waiting: hasWaiting,
+        active: reg?.active?.state ?? null,
+      });
+      lastWaitingState = hasWaiting;
+    }
 
-    // 🔔 Alert (iOS quick visibility)
-    alert(`SW state:\n${JSON.stringify(swState, null, 2)}`);
+    // 🔔 Alert ONLY when a new SW is waiting AND we haven't alerted for this version
+    if (hasWaiting && lastAlertedVersion !== localVersion) {
+      lastAlertedVersion = localVersion;
+
+      alert(
+        `A new version of the ATC Crisis App is available.\n\n` +
+          `The app will update automatically.`
+      );
+    }
   }
 
-  // 2) Ask the register helper to check (no reload yet)
-  void updateSW(false);
-
-  // 3) Version check decides whether to apply + reload
-  checkAppVersion({ onUpdateNeeded: () => void updateSW(true) });
+  // Version check decides whether to apply + reload
+  checkAppVersion({
+    onUpdateNeeded: () => {
+      console.log("Version mismatch detected. Applying update...");
+      void updateSW(true);
+    },
+  });
 };
 
 const updateSW = registerSW({
