@@ -15,38 +15,81 @@ import { msalConfig } from "./auth/msalConfig";
 
 const msalInstance = new PublicClientApplication(msalConfig);
 
+/** Force the browser to re-check the service worker script right now. */
+async function forceServiceWorkerUpdateCheck() {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    await reg?.update();
+  } catch {
+    // ignore; app should still run offline
+  }
+}
+
 // Helper: always poke SW, then do version check (apply if mismatch)
-const runUpdateChecks = (updateSW: (reloadPage?: boolean) => Promise<void>) => {
-  void updateSW(false); // ask SW to check (no reload)
-  checkAppVersion({ onUpdateNeeded: () => void updateSW(true) }); // apply + reload if mismatch
+const runUpdateChecks = async (
+  updateSW: (reloadPage?: boolean) => Promise<void>
+) => {
+  // 1) Force an actual SW update check at the browser level
+  await forceServiceWorkerUpdateCheck();
+
+  if ("serviceWorker" in navigator) {
+    const reg = await navigator.serviceWorker.getRegistration();
+
+    const swState = {
+      hasReg: !!reg,
+      installing: reg?.installing?.state ?? null,
+      waiting: reg?.waiting?.state ?? null,
+      active: reg?.active?.state ?? null,
+    };
+
+    // 🖥 Console (desktop / remote debug)
+    console.log("SW state:", swState);
+
+    // 🔔 Alert (iOS quick visibility)
+    alert(`SW state:\n${JSON.stringify(swState, null, 2)}`);
+  }
+
+  // 2) Ask the register helper to check (no reload yet)
+  void updateSW(false);
+
+  // 3) Version check decides whether to apply + reload
+  checkAppVersion({ onUpdateNeeded: () => void updateSW(true) });
 };
 
 const updateSW = registerSW({
   immediate: true,
+
   onOfflineReady() {
     console.log("ATC Crisis App is ready to work offline");
   },
+
   onNeedRefresh() {
     console.log("New version available (SW). Applying update...");
     void updateSW(true);
   },
 
-  // ✅ Key change: only run initial checks once SW is actually registered
+  // ✅ This exists in your installed typings
   onRegistered() {
-    runUpdateChecks(updateSW);
+    void runUpdateChecks(updateSW);
+  },
+
+  onRegisterError(error) {
+    console.error("Service Worker registration error:", error);
   },
 });
 
-// ✅ Also re-check on common “app is active again” signals
-window.addEventListener("online", () => runUpdateChecks(updateSW));
+// ✅ Also run once on initial boot (don’t rely only on onRegistered)
+void runUpdateChecks(updateSW);
 
-// iOS PWA sometimes behaves better with these than visibilitychange alone
-window.addEventListener("focus", () => runUpdateChecks(updateSW));
-window.addEventListener("pageshow", () => runUpdateChecks(updateSW));
+// ✅ Re-check on common “app is active again” signals
+window.addEventListener("online", () => void runUpdateChecks(updateSW));
+window.addEventListener("focus", () => void runUpdateChecks(updateSW));
+window.addEventListener("pageshow", () => void runUpdateChecks(updateSW));
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
-    runUpdateChecks(updateSW);
+    void runUpdateChecks(updateSW);
   }
 });
 

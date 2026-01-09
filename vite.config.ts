@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: [
         "favicon.ico",
         "apple-touch-icon.png",
@@ -53,6 +53,8 @@ export default defineConfig({
         navigateFallback: "/atc-crisisapp/index.html",
         cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        clientsClaim: true,
+        skipWaiting: true,
       },
       devOptions: {
         enabled: false,
