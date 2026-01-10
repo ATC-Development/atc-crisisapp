@@ -307,7 +307,7 @@ export default function FormScreen() {
   };
 
   return (
-    <div className="p-4 pt-12 max-w-md mx-auto">
+    <div className="p-4 page-top-offset max-w-md mx-auto">
       <BackButton />
       <h1 className="text-2xl font-bold mb-6 text-center">{form.title}</h1>
 

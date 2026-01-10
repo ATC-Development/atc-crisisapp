@@ -24,7 +24,7 @@ export default function CategoriesScreen() {
 
   return (
     <main
-      className="flex flex-col justify-between min-h-screen bg-gray-100 px-4 py-12 relative"
+      className="flex flex-col justify-between min-h-screen bg-gray-100 px-4 page-top-offset relative"
       style={{
         backgroundImage: `url(${poolPic})`,
         backgroundSize: "cover",

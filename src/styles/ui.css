@@ -5,7 +5,8 @@
 @layer components {
   /* Page surfaces */
   .app-page {
-    @apply min-h-screen bg-slate-200 pt-8;
+    @apply min-h-screen bg-slate-200;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 50px);
   }
 
   .app-container {
@@ -49,3 +50,9 @@
     @apply rounded-2xl border border-red-300 bg-red-50 shadow-sm p-4;
   }
 }
+
+/* Space below status banner + safe area */
+.page-top-offset {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 72px);
+}
+
