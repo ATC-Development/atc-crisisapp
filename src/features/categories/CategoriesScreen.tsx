@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import logo from "../../assets/ATC_Office.jpg";
 import poolPic from "../../assets/Augustan_Pool.jpg";
 import { clearAppLocalStorage } from "../utils/localStorageHelpers";
+// import { TokenDebugButton } from "../components/DebugButton";
+// import { loginRequest, flowRequest } from "../../auth/msalConfig";
 
 const crisisCategories = [
   { name: "Fire / Evacuation", slug: "fire", color: "bg-red-600" },
@@ -44,6 +46,13 @@ export default function CategoriesScreen() {
         </h1>
 
         <div className="flex flex-col space-y-4 w-full max-w-xs mx-auto">
+          {/* <TokenDebugButton
+            scopeSets={[
+              { label: "Graph", scopes: loginRequest.scopes },
+              { label: "Flow API", scopes: flowRequest.scopes },
+            ]}
+          /> */}
+
           {crisisCategories.map((category) => (
             <button
               key={category.slug}

@@ -12,6 +12,7 @@ import { PhotosField } from "./fields/photosField";
 import type { PhotoPayload } from "./fields/photosField";
 import { useMsal } from "@azure/msal-react";
 import { useProximityLocation } from "../../hooks/useProximityLocation";
+import { flowRequest } from "../../auth/msalConfig";
 
 type FieldValue = string | number | boolean | PhotoPayload[];
 
@@ -37,6 +38,7 @@ type SubmitPayload = Record<string, SubmitValue> & {
   formTitle: string;
   submittedByName: string;
   submittedByEmail: string;
+  accessToken: string; // <-- moved token into body for sig-trigger flow
 };
 
 export default function FormScreen() {
@@ -55,7 +57,7 @@ export default function FormScreen() {
   const { status: loc } = useProximityLocation({ refreshMs: 10 * 60 * 1000 });
   const didAutoSetLocation = useRef(false);
 
-  const { accounts } = useMsal();
+  const { instance, accounts } = useMsal();
   const account = accounts[0];
   const isSignedIn = !!account;
 
@@ -252,40 +254,50 @@ export default function FormScreen() {
     setSubmitSuccess(null);
     setSubmitMessage("");
 
-    const payload: SubmitPayload = {
-      formTitle: form.title,
-      submittedByName,
-      submittedByEmail,
-    };
+    try {
+      // Acquire Flow/API token first so we can include it in the request body.
+      const token = await instance.acquireTokenSilent({
+        account,
+        scopes: flowRequest.scopes,
+      });
 
-    for (const item of form.items) {
-      if (item.type === "files") {
-        const photos = (item.value as PhotoPayload[]) ?? [];
-        payload[item.id] = photos.map((p) => ({
-          name: p.name,
-          contentType: p.contentType,
-          contentBase64: p.dataUrl.split(",")[1] ?? "",
-        }));
-      } else {
-        payload[item.id] = String(item.value ?? "");
-      }
+      const payload: SubmitPayload = {
+        formTitle: form.title,
+        submittedByName,
+        submittedByEmail,
+        accessToken: token.accessToken,
+      };
 
-      if (item.subItems) {
-        for (const sub of item.subItems) {
-          payload[sub.id] = String(sub.value ?? "");
+      for (const item of form.items) {
+        if (item.type === "files") {
+          const photos = (item.value as PhotoPayload[]) ?? [];
+          payload[item.id] = photos.map((p) => ({
+            name: p.name,
+            contentType: p.contentType,
+            contentBase64: p.dataUrl.split(",")[1] ?? "",
+          }));
+        } else {
+          payload[item.id] = String(item.value ?? "");
+        }
+
+        if (item.subItems) {
+          for (const sub of item.subItems) {
+            payload[sub.id] = String(sub.value ?? "");
+          }
         }
       }
-    }
 
-    try {
-      console.log(
-        "🚀 Incident Form Payload:",
-        JSON.stringify(payload, null, 2)
-      );
+      // console.log(
+      //   "🚀 Incident Form Payload:",
+      //   JSON.stringify(payload, null, 2)
+      // );
 
+      // NOTE: Using sig-trigger URL → do NOT send Authorization header.
       const res = await fetch(initialForm.submitUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 

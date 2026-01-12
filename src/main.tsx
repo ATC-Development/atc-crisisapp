@@ -106,10 +106,44 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <MsalProvider instance={msalInstance}>
-      <App />
-    </MsalProvider>
-  </StrictMode>
-);
+// ...everything above stays exactly the same...
+
+// console.log("AUTH RETURN URL (pre-msal):", {
+//   href: window.location.href,
+//   origin: window.location.origin,
+//   pathname: window.location.pathname,
+//   search: window.location.search,
+//   hash: window.location.hash,
+// });
+
+async function bootstrap() {
+  // ✅ Let MSAL finish processing the redirect before React Router mounts
+  try {
+    // ✅ REQUIRED in newer msal-browser
+    await msalInstance.initialize();
+
+    // ✅ Now safe to call
+    const result = await msalInstance.handleRedirectPromise();
+    console.log("MSAL redirect result:", result);
+  } catch (e) {
+    console.error("MSAL init/redirect error:", e);
+  }
+
+  // console.log("AUTH RETURN URL (post-msal):", {
+  //   href: window.location.href,
+  //   origin: window.location.origin,
+  //   pathname: window.location.pathname,
+  //   search: window.location.search,
+  //   hash: window.location.hash,
+  // });
+
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <MsalProvider instance={msalInstance}>
+        <App />
+      </MsalProvider>
+    </StrictMode>
+  );
+}
+
+void bootstrap();

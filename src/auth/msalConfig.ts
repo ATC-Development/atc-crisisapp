@@ -27,12 +27,20 @@ export const msalConfig: Configuration = {
     },
   },
 };
-console.log("MSAL clientId loaded:", import.meta.env.VITE_AAD_CLIENT_ID);
+// console.log("MSAL clientId loaded:", import.meta.env.VITE_AAD_CLIENT_ID);
+// console.log("appRoot:", appRoot);
+
 
 export const loginRequest = {
-  scopes: ["openid", "profile", "email"],
+  scopes: ["openid", "profile", "email", "User.Read"],
   extraQueryParameters: {
     response_mode: "query",
   },
 };
+// msalConfig.ts
+export const flowRequest = {
+  scopes: ["api://9796b08e-807e-4aeb-981a-dc24e9421c9a/access_as_user"],
+};
+
+
 
