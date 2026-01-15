@@ -13,6 +13,8 @@ import { PublicClientApplication } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from "./auth/msalConfig";
 
+import ProximityProvider from "./features/components/ProximityProvider";
+
 const msalInstance = new PublicClientApplication(msalConfig);
 
 let lastAlertedVersion: string | null = null;
@@ -140,7 +142,9 @@ async function bootstrap() {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <MsalProvider instance={msalInstance}>
-        <App />
+        <ProximityProvider>
+          <App />
+        </ProximityProvider>
       </MsalProvider>
     </StrictMode>
   );

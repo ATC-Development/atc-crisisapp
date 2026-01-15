@@ -3,15 +3,51 @@ import { useParams } from "react-router-dom";
 import { checklistData } from "./checklistData";
 import BackButton from "../components/BackButton";
 import FormSelector from "../forms/formSelector";
+import LeadershipAlertModal from "../components/LeadershipAlertModal";
+import { useMsal } from "@azure/msal-react";
+import { useProximity } from "../components/ProximityContext";
+
 import {
   loadLocalStorage,
   saveLocalStorage,
   clearChecklist,
 } from "../utils/localStorageHelpers";
 
-type LinkItem = { label: string; link: string };
+type LinkItem = {
+  label: string;
+  link: string;
+  meta?: {
+    kind?: "call911" | string;
+    triggerLeadershipOnComplete?: boolean;
+  };
+};
 type ChecklistPart = string | LinkItem;
 type ChecklistItem = string | LinkItem | ChecklistPart[];
+
+type UnknownRecord = Record<string, unknown>;
+
+function isRecord(x: unknown): x is UnknownRecord {
+  return typeof x === "object" && x !== null;
+}
+
+function isLinkItem(x: unknown): x is LinkItem {
+  if (!isRecord(x)) return false;
+  const label = x["label"];
+  const link = x["link"];
+  return typeof label === "string" && typeof link === "string";
+}
+
+function itemTriggersLeadership(item: ChecklistItem): boolean {
+  if (isLinkItem(item)) return !!item.meta?.triggerLeadershipOnComplete;
+
+  if (Array.isArray(item)) {
+    return item.some(
+      (part) => isLinkItem(part) && !!part.meta?.triggerLeadershipOnComplete
+    );
+  }
+
+  return false;
+}
 
 export default function ChecklistScreen() {
   const { category } = useParams<{ category: string }>();
@@ -22,17 +58,25 @@ export default function ChecklistScreen() {
 
   const storageKey = `checklist-${category}`;
 
-  // 🧠 Use null to avoid premature rendering and storage overwrite
   const [checkedItems, setCheckedItems] = useState<boolean[] | null>(null);
+  const [leadershipModalOpen, setLeadershipModalOpen] = useState(false);
 
-  // ✅ Load from localStorage on mount
+  const suppressKey = `${storageKey}-suppress-911-leadership`;
+  const [suppressLeadershipPrompt, setSuppressLeadershipPrompt] =
+    useState<boolean>(false);
+
+  const { accounts } = useMsal();
+  const account = accounts?.[0];
+
+  // ✅ Pull the already-computed proximity text (matches banner exactly)
+  const { proximityText } = useProximity();
+
   useEffect(() => {
     if (!category) return;
 
     const fallback = Array(checklist.items.length).fill(false) as boolean[];
     const loaded = loadLocalStorage<boolean[]>(storageKey, fallback);
 
-    // Normalize length in case checklist changed between app versions
     const normalized =
       loaded.length === checklist.items.length
         ? loaded
@@ -41,24 +85,39 @@ export default function ChecklistScreen() {
     setCheckedItems(normalized);
   }, [category, checklist.items.length, storageKey]);
 
-  // ✅ Save to localStorage on change
+  useEffect(() => {
+    if (!category) return;
+    const stored = loadLocalStorage<boolean>(suppressKey, false);
+    setSuppressLeadershipPrompt(!!stored);
+  }, [category, suppressKey]);
+
   useEffect(() => {
     if (checkedItems !== null) {
       saveLocalStorage<boolean[]>(storageKey, checkedItems);
     }
   }, [checkedItems, storageKey]);
 
-  // ✅ Toggle handler
   const toggleCheckbox = (index: number) => {
     setCheckedItems((prev) => {
       if (!prev) return null;
+
       const updated = [...prev];
-      updated[index] = !updated[index];
+      const nextValue = !updated[index];
+      updated[index] = nextValue;
+
+      const item = checklist.items[index];
+      if (
+        nextValue === true &&
+        !suppressLeadershipPrompt &&
+        itemTriggersLeadership(item)
+      ) {
+        setLeadershipModalOpen(true);
+      }
+
       return updated;
     });
   };
 
-  // ✅ Hooks + derived values must be before any conditional return
   const total = checklist.items.length;
   const safeChecked = checkedItems ?? Array(total).fill(false);
 
@@ -66,7 +125,6 @@ export default function ChecklistScreen() {
   const pct = total ? Math.round((done / total) * 100) : 0;
   const remaining = total - done;
 
-  // Optional: reorder to show remaining items first
   const orderedIndexes = useMemo(() => {
     const idxs = Array.from({ length: total }, (_, i) => i);
     return idxs.sort((a, b) => Number(safeChecked[a]) - Number(safeChecked[b]));
@@ -108,7 +166,6 @@ export default function ChecklistScreen() {
     );
   };
 
-  // ✅ Avoid rendering until state is loaded
   if (checkedItems === null) {
     return (
       <div className="p-4 max-w-md mx-auto">
@@ -120,7 +177,6 @@ export default function ChecklistScreen() {
   return (
     <div className="app-page">
       <div className="app-container">
-        {/* Sticky header (aligned with cards) */}
         <div className="app-header">
           <div className="app-header-surface">
             <BackButton />
@@ -146,7 +202,6 @@ export default function ChecklistScreen() {
           </div>
         </div>
 
-        {/* Checklist card */}
         <div className="card overflow-hidden">
           <ul className="divide-y divide-slate-300">
             {orderedIndexes.map((index) => {
@@ -181,14 +236,12 @@ export default function ChecklistScreen() {
           </ul>
         </div>
 
-        {/* Forms card */}
         <div className="card card-section">
           <div className="mt-3">
             <FormSelector />
           </div>
         </div>
 
-        {/* Danger zone */}
         <div className="danger-card">
           <div className="text-sm font-semibold text-red-700">Danger zone</div>
           <div className="text-sm text-red-700/80 mt-1">
@@ -209,6 +262,25 @@ export default function ChecklistScreen() {
           </button>
         </div>
       </div>
+
+      <LeadershipAlertModal
+        open={leadershipModalOpen}
+        onClose={() => setLeadershipModalOpen(false)}
+        onSend={(payload) => {
+          console.log("Leadership Alert Payload:", payload);
+
+          if (payload.dontAskAgain) {
+            setSuppressLeadershipPrompt(true);
+            saveLocalStorage<boolean>(suppressKey, true);
+          }
+
+          setLeadershipModalOpen(false);
+        }}
+        categoryLabel={checklist.title}
+        reporterName={account?.name ?? "Unknown"}
+        reporterEmail={account?.username}
+        locationText={proximityText}
+      />
     </div>
   );
 }

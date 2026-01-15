@@ -1,39 +1,14 @@
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "./msalConfig";
-import { useProximityLocation } from "../hooks/useProximityLocation";
 import { useEffect, useRef } from "react";
+import { useProximity } from "../features/components/ProximityContext";
 import { useLocation } from "react-router-dom";
-
-
-// function fmtMeters(m: number) {
-//   if (!Number.isFinite(m)) return "";
-//   if (m < 1000) return `${Math.round(m)}m`;
-//   return `${(m / 1000).toFixed(1)}km`;
-// }
-
-function fmtDistanceUS(meters: number) {
-  if (!Number.isFinite(meters)) return "";
-
-  const miles = meters / 1609.344;
-
-  // Under 0.1 mi, show feet (more intuitive)
-  if (miles < 0.1) {
-    const feet = meters * 3.28084;
-    return `${Math.round(feet)}ft`;
-  }
-
-  // Otherwise show miles
-  return `${miles.toFixed(miles < 1 ? 2 : 1)}mi`;
-}
-
 
 export default function AuthStatusBanner() {
   const { instance, accounts } = useMsal();
   const account = accounts[0];
 
-  const { status: loc, refresh: refreshLoc } = useProximityLocation({
-    refreshMs: 2 * 60 * 1000,
-  });
+  const { loc, refreshLoc, proximityText } = useProximity();
 
   const handleLogin = async () => {
     await instance.loginRedirect(loginRequest);
@@ -50,11 +25,16 @@ export default function AuthStatusBanner() {
     });
   };
 
-    const route = useLocation();
+  // Refresh location on first mount
+  useEffect(() => {
+    void refreshLoc();
+  }, [refreshLoc]);
+
+  // Refresh location when switching screens, but throttle so rapid taps don't spam GPS
+  const route = useLocation();
   const lastNavRefreshRef = useRef(0);
 
   useEffect(() => {
-    // Refresh location when switching screens, but throttle so rapid taps don't spam GPS
     const now = Date.now();
     const THROTTLE_MS = 15_000;
 
@@ -63,23 +43,6 @@ export default function AuthStatusBanner() {
     lastNavRefreshRef.current = now;
     void refreshLoc();
   }, [route.pathname, refreshLoc]);
-
-  // Banner text (short + exec-friendly)
-  let proximityText = "Locating…";
-  if (loc.state === "denied") proximityText = "Location blocked";
-  else if (loc.state === "unavailable") proximityText = "Location unavailable";
-  else if (loc.state === "error") proximityText = "Location error";
-  else if (loc.state === "ok") {
-    if (loc.nearest && loc.nearest.withinRadius) {
-      proximityText = `Near ${loc.nearest.name}`;
-    } else if (loc.nearest) {
-      proximityText = `Not at any property • closest ${
-        loc.nearest.name
-      } (${fmtDistanceUS(loc.nearest.distanceMeters)})`;
-    } else {
-      proximityText = "Not at any property";
-    }
-  }
 
   // Compact floating pill (doesn't consume layout space)
   return (
@@ -92,7 +55,6 @@ export default function AuthStatusBanner() {
       }}
     >
       <div className="pointer-events-auto inline-flex max-w-full items-start gap-3 rounded-2xl border border-white/30 bg-black/25 px-3 py-2 text-xs text-white shadow-lg backdrop-blur">
-
         {/* Text block */}
         <div className="min-w-0 flex-1">
           {/* Top line: account name OR signed-out label */}
