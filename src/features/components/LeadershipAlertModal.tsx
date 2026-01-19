@@ -19,7 +19,6 @@ type Props = {
   reporterName: string;
   reporterEmail?: string;
   locationText: string;
-
   defaultNote?: string;
 
   // Future enhancement: voice-to-text

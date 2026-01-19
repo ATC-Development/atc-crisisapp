@@ -13,6 +13,9 @@ import {
   clearChecklist,
 } from "../utils/localStorageHelpers";
 
+import { postToLeadershipChat } from "../utils/postToLeadershipChat";
+import type { LeadershipChatPayload } from "../utils/postToLeadershipChat";
+
 type LinkItem = {
   label: string;
   link: string;
@@ -266,20 +269,45 @@ export default function ChecklistScreen() {
       <LeadershipAlertModal
         open={leadershipModalOpen}
         onClose={() => setLeadershipModalOpen(false)}
-        onSend={(payload) => {
-          console.log("Leadership Alert Payload:", payload);
+        onSend={async (payload) => {
+          const body: LeadershipChatPayload = {
+            categoryLabel: checklist.title,
+            reporterName: account?.name ?? "Unknown",
+            reporterEmail: account?.username ?? "",
+            locationText: proximityText,
+            note: payload.note ?? "",
+            dontAskAgain: !!payload.dontAskAgain,
+          };
 
-          if (payload.dontAskAgain) {
-            setSuppressLeadershipPrompt(true);
-            saveLocalStorage<boolean>(suppressKey, true);
+          try {
+            const result = await postToLeadershipChat(body);
+
+            if (!result.ok) {
+              console.error(
+                "Power Automate failed:",
+                result.status,
+                result.bodyText
+              );
+              alert(`Leadership alert failed (${result.status}).`);
+              return;
+            }
+
+            if (payload.dontAskAgain) {
+              setSuppressLeadershipPrompt(true);
+              saveLocalStorage<boolean>(suppressKey, true);
+            }
+
+            setLeadershipModalOpen(false);
+          } catch (err) {
+            console.error("Leadership alert error:", err);
+            alert("Leadership alert failed (network/CORS/config).");
           }
-
-          setLeadershipModalOpen(false);
         }}
         categoryLabel={checklist.title}
         reporterName={account?.name ?? "Unknown"}
         reporterEmail={account?.username}
         locationText={proximityText}
+        defaultNote=""
       />
     </div>
   );
