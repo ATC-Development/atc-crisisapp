@@ -23,6 +23,7 @@ export function saveLocalStorage<T>(key: string, data: T): void {
 export function clearChecklist(category: string): void {
   try {
     localStorage.removeItem(`checklist-${category}`);
+    localStorage.removeItem(`leadershipalert_sent:${category}`);
   } catch (e) {
     console.error(`Failed to clear checklist for "${category}"`, e);
   }
@@ -40,7 +41,7 @@ export function clearForm(formId: string): void {
 export function clearAppLocalStorage(): void {
   try {
     Object.keys(localStorage).forEach(key => {
-      if (key.startsWith("checklist-") || key.startsWith("form-")) {
+      if (key.startsWith("checklist-") || key.startsWith("form-") || key.startsWith("leadershipalert")) {
         localStorage.removeItem(key);
       }
     });
