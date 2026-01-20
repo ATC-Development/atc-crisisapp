@@ -17,7 +17,7 @@ export const checklistData: Record<string, { title: string; items: ChecklistItem
   fire: {
     title: "Fire / Evacuation Checklist",
     items: [
-      "Actvate nearest alarm",
+      "Activate nearest alarm",
       Emergency,
       "Evacuate using nearest exit (no elevators)",
       "Assist others if safe to do so",
