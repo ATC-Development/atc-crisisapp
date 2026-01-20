@@ -16,6 +16,8 @@ import {
 import { postToLeadershipChat } from "../utils/postToLeadershipChat";
 import type { LeadershipChatPayload } from "../utils/postToLeadershipChat";
 
+import LeadershipResendModal from "../components/LeadershipResendModal";
+
 type LinkItem = {
   label: string;
   link: string;
@@ -45,7 +47,7 @@ function itemTriggersLeadership(item: ChecklistItem): boolean {
 
   if (Array.isArray(item)) {
     return item.some(
-      (part) => isLinkItem(part) && !!part.meta?.triggerLeadershipOnComplete
+      (part) => isLinkItem(part) && !!part.meta?.triggerLeadershipOnComplete,
     );
   }
 
@@ -63,16 +65,38 @@ export default function ChecklistScreen() {
 
   const [checkedItems, setCheckedItems] = useState<boolean[] | null>(null);
   const [leadershipModalOpen, setLeadershipModalOpen] = useState(false);
+  const [resendModalOpen, setResendModalOpen] = useState(false);
+  const [pendingLeadershipIndex, setPendingLeadershipIndex] = useState<
+    number | null
+  >(null);
 
-  const suppressKey = `${storageKey}-suppress-911-leadership`;
-  const [suppressLeadershipPrompt, setSuppressLeadershipPrompt] =
-    useState<boolean>(false);
+  // const suppressKey = `${storageKey}-suppress-911-leadership`;
+  // const [suppressLeadershipPrompt, setSuppressLeadershipPrompt] =
+  //   useState<boolean>(false);
 
   const { accounts } = useMsal();
   const account = accounts?.[0];
 
   // ✅ Pull the already-computed proximity text (matches banner exactly)
   const { proximityText } = useProximity();
+
+  const LEADERSHIP_ALERT_SENT_KEY = `leadershipalert_sent:${category}`;
+
+  const [leadershipAlertSent, setLeadershipAlertSent] = useState<boolean>(
+    () => {
+      return loadLocalStorage<boolean>(LEADERSHIP_ALERT_SENT_KEY, false);
+    },
+  );
+
+  const markLeadershipAlertSent = () => {
+    setLeadershipAlertSent(true);
+    saveLocalStorage<boolean>(LEADERSHIP_ALERT_SENT_KEY, true);
+  };
+
+  const clearLeadershipAlertSent = () => {
+    setLeadershipAlertSent(false);
+    saveLocalStorage<boolean>(LEADERSHIP_ALERT_SENT_KEY, false);
+  };
 
   useEffect(() => {
     if (!category) return;
@@ -88,11 +112,11 @@ export default function ChecklistScreen() {
     setCheckedItems(normalized);
   }, [category, checklist.items.length, storageKey]);
 
-  useEffect(() => {
-    if (!category) return;
-    const stored = loadLocalStorage<boolean>(suppressKey, false);
-    setSuppressLeadershipPrompt(!!stored);
-  }, [category, suppressKey]);
+  // useEffect(() => {
+  //   if (!category) return;
+  //   const stored = loadLocalStorage<boolean>(suppressKey, false);
+  //   setSuppressLeadershipPrompt(!!stored);
+  // }, [category, suppressKey]);
 
   useEffect(() => {
     if (checkedItems !== null) {
@@ -111,12 +135,18 @@ export default function ChecklistScreen() {
       const item = checklist.items[index];
       if (
         nextValue === true &&
-        !suppressLeadershipPrompt &&
+        // !suppressLeadershipPrompt &&
         itemTriggersLeadership(item)
       ) {
-        setLeadershipModalOpen(true);
+        if (leadershipAlertSent) {
+          // Already sent; ask to resend
+          setPendingLeadershipIndex(index);
+          setResendModalOpen(true);
+        } else {
+          // Not sent yet; open modal
+          setLeadershipModalOpen(true);
+        }
       }
-
       return updated;
     });
   };
@@ -150,7 +180,7 @@ export default function ChecklistScreen() {
                   {part.label}
                 </a>
               </div>
-            )
+            ),
           )
         ) : typeof item === "string" ? (
           <div>{item}</div>
@@ -286,16 +316,19 @@ export default function ChecklistScreen() {
               console.error(
                 "Power Automate failed:",
                 result.status,
-                result.bodyText
+                result.bodyText,
               );
               alert(`Leadership alert failed (${result.status}).`);
               return;
             }
 
-            if (payload.dontAskAgain) {
-              setSuppressLeadershipPrompt(true);
-              saveLocalStorage<boolean>(suppressKey, true);
-            }
+            // Mark as sent after successful send
+            markLeadershipAlertSent();
+
+            // if (payload.dontAskAgain) {
+            // setSuppressLeadershipPrompt(true);
+            // saveLocalStorage<boolean>(suppressKey, true);
+            // }
 
             setLeadershipModalOpen(false);
           } catch (err) {
@@ -308,6 +341,33 @@ export default function ChecklistScreen() {
         reporterEmail={account?.username}
         locationText={proximityText}
         defaultNote=""
+      />
+
+      <LeadershipResendModal
+        open={resendModalOpen}
+        onCancel={() => {
+          setResendModalOpen(false);
+          setPendingLeadershipIndex(null);
+        }}
+        onConfirm={() => {
+          // Allow another send
+          clearLeadershipAlertSent();
+
+          setResendModalOpen(false);
+
+          // Optionally re-check the item now that they confirmed resend
+          if (pendingLeadershipIndex !== null) {
+            setCheckedItems((prev) => {
+              if (!prev) return prev;
+              const updated = [...prev];
+              updated[pendingLeadershipIndex] = true;
+              return updated;
+            });
+          }
+
+          setPendingLeadershipIndex(null);
+          setLeadershipModalOpen(true);
+        }}
       />
     </div>
   );

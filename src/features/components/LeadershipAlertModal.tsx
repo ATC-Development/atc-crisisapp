@@ -36,13 +36,14 @@ export default function LeadershipAlertModal({
   defaultNote = "",
 }: Props) {
   const [note, setNote] = useState(defaultNote);
-  const [dontAskAgain, setDontAskAgain] = useState(false);
+  // const [dontAskAgain, setDontAskAgain] = useState(false);
+  const [sending, setSending] = useState(false);
 
   // Reset form when opened
   useEffect(() => {
     if (open) {
       setNote(defaultNote || "");
-      setDontAskAgain(false);
+      // setDontAskAgain(false);
     }
   }, [open, defaultNote]);
 
@@ -141,7 +142,7 @@ export default function LeadershipAlertModal({
             </div>
 
             {/* Don't ask again */}
-            <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-white/80">
+            {/* <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-white/80">
               <input
                 type="checkbox"
                 checked={dontAskAgain}
@@ -149,7 +150,7 @@ export default function LeadershipAlertModal({
                 className="h-4 w-4 rounded border-white/20 bg-white/10"
               />
               Don’t ask again during this incident
-            </label>
+            </label> */}
 
             {/* Actions */}
             <div className="mt-5 flex items-center justify-end gap-2">
@@ -161,19 +162,26 @@ export default function LeadershipAlertModal({
               </button>
 
               <button
-                onClick={() =>
-                  onSend({
-                    categoryLabel,
-                    reporterName,
-                    reporterEmail,
-                    locationText,
-                    note: note.trim() ? note.trim() : undefined,
-                    dontAskAgain,
-                  })
-                }
+                onClick={async () => {
+                  if (sending) return;
+                  setSending(true);
+                  try {
+                    await onSend({
+                      categoryLabel,
+                      reporterName,
+                      reporterEmail,
+                      locationText,
+                      note: note.trim() ? note.trim() : undefined,
+                      // dontAskAgain,
+                    });
+                  } finally {
+                    setSending(false);
+                  }
+                }}
+                disabled={sending}
                 className="rounded-full bg-red-500/90 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500"
               >
-                Send alert
+                {sending ? "Sending..." : "Send alert"}
               </button>
             </div>
           </div>
