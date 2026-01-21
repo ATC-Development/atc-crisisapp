@@ -18,6 +18,8 @@ import type { LeadershipChatPayload } from "../utils/postToLeadershipChat";
 
 import LeadershipResendModal from "../components/LeadershipResendModal";
 
+import { AnimatePresence, motion } from "framer-motion";
+
 type LinkItem = {
   label: string;
   link: string;
@@ -70,6 +72,10 @@ export default function ChecklistScreen() {
     number | null
   >(null);
 
+  const [deferredLeadershipIndex, setDeferredLeadershipIndex] = useState<
+    number | null
+  >(null);
+
   // const suppressKey = `${storageKey}-suppress-911-leadership`;
   // const [suppressLeadershipPrompt, setSuppressLeadershipPrompt] =
   //   useState<boolean>(false);
@@ -96,6 +102,20 @@ export default function ChecklistScreen() {
   const clearLeadershipAlertSent = () => {
     setLeadershipAlertSent(false);
     saveLocalStorage<boolean>(LEADERSHIP_ALERT_SENT_KEY, false);
+  };
+
+  const openLeadershipForIndex = (index: number) => {
+    setPendingLeadershipIndex(index);
+    setLeadershipModalOpen(true);
+  };
+
+  const deferLeadershipForIndex = (index: number) => {
+    setDeferredLeadershipIndex(index);
+    setLeadershipModalOpen(false);
+  };
+
+  const clearDeferredLeadership = () => {
+    setDeferredLeadershipIndex(null);
   };
 
   useEffect(() => {
@@ -144,8 +164,10 @@ export default function ChecklistScreen() {
           setResendModalOpen(true);
         } else {
           // Not sent yet; open modal
-          setLeadershipModalOpen(true);
+          openLeadershipForIndex(index);
         }
+        // IMPORTANT: do not allow completing the item until leadership is handled
+        updated[index] = false;
       }
       return updated;
     });
@@ -299,6 +321,13 @@ export default function ChecklistScreen() {
       <LeadershipAlertModal
         open={leadershipModalOpen}
         onClose={() => setLeadershipModalOpen(false)}
+        onNotNow={() => {
+          if (pendingLeadershipIndex != null) {
+            deferLeadershipForIndex(pendingLeadershipIndex);
+          } else {
+            setLeadershipModalOpen(false);
+          }
+        }}
         onSend={async (payload) => {
           const body: LeadershipChatPayload = {
             categoryLabel: checklist.title,
@@ -325,11 +354,25 @@ export default function ChecklistScreen() {
             // Mark as sent after successful send
             markLeadershipAlertSent();
 
+            // ✅ Now that leadership is handled, allow the checkbox to become checked
+            if (pendingLeadershipIndex !== null) {
+              const idx = pendingLeadershipIndex;
+
+              setCheckedItems((prev) => {
+                if (!prev) return prev;
+                const updated = [...prev];
+                updated[idx] = true;
+                return updated;
+              });
+
+              setPendingLeadershipIndex(null);
+            }
+
             // if (payload.dontAskAgain) {
             // setSuppressLeadershipPrompt(true);
             // saveLocalStorage<boolean>(suppressKey, true);
             // }
-
+            clearDeferredLeadership();
             setLeadershipModalOpen(false);
           } catch (err) {
             console.error("Leadership alert error:", err);
@@ -369,6 +412,33 @@ export default function ChecklistScreen() {
           setLeadershipModalOpen(true);
         }}
       />
+
+      <AnimatePresence>
+        {!leadershipAlertSent && deferredLeadershipIndex !== null && (
+          <motion.button
+            key="leadership-pill"
+            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="
+        fixed bottom-4 left-4 z-50
+        flex items-center gap-2
+        rounded-full px-4 py-2
+        bg-red-600 text-white shadow-lg
+        active:scale-95
+      "
+            onClick={() => {
+              setPendingLeadershipIndex(deferredLeadershipIndex);
+              setLeadershipModalOpen(true);
+            }}
+            aria-label="Alert Leadership"
+          >
+            <span aria-hidden="true">🚨</span>
+            <span className="text-sm font-semibold">Alert Leadership</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

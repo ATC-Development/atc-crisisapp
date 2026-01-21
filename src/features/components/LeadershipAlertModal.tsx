@@ -20,6 +20,7 @@ type Props = {
   reporterEmail?: string;
   locationText: string;
   defaultNote?: string;
+  onNotNow: () => void;
 
   // Future enhancement: voice-to-text
   allowVoiceNote?: boolean;
@@ -34,6 +35,7 @@ export default function LeadershipAlertModal({
   reporterEmail,
   locationText,
   defaultNote = "",
+  onNotNow,
 }: Props) {
   const [note, setNote] = useState(defaultNote);
   // const [dontAskAgain, setDontAskAgain] = useState(false);
@@ -155,7 +157,7 @@ export default function LeadershipAlertModal({
             {/* Actions */}
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
-                onClick={onClose}
+                onClick={onNotNow}
                 className="rounded-full bg-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/20"
               >
                 Not now
