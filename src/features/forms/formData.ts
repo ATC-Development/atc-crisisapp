@@ -103,7 +103,7 @@ export const FormData: Record<
       },
       {
         id: "exposureType",
-        label: "Exposure Type (if applicable)",
+        label: "Exposure Type (if applicable)\n(ex: chemicals to the skin, mouth, or eye; a cut from an objectblood is now exposed in that area; etc....)",
         value: "",
         type: "text",
       },

@@ -138,7 +138,7 @@ export default function FormScreen() {
       produce(current as FormDefinition, (draft) => {
         const item = draft.items.find((i) => i.id === "location");
         if (item) item.value = gpsName;
-      })
+      }),
     );
   }, [form, loc]);
 
@@ -200,7 +200,7 @@ export default function FormScreen() {
             }
           }
         }
-      })
+      }),
     );
   };
 
@@ -245,7 +245,7 @@ export default function FormScreen() {
       setSubmitMessage(
         `Please fill out required fields: ${missing
           .map((m) => m.label)
-          .join(", ")}`
+          .join(", ")}`,
       );
       return;
     }
@@ -333,7 +333,16 @@ export default function FormScreen() {
           return (
             <div key={item.id} className="bg-gray-100 shadow rounded-lg p-4">
               <label className="block text-gray-800 font-medium mb-2">
-                {item.label}
+                {item.label.split("\n").map((line, index) => (
+                  <div
+                    key={index}
+                    className={
+                      index === 0 ? "" : "text-sm text-gray-600 font-normal"
+                    }
+                  >
+                    {line}
+                  </div>
+                ))}
                 {item.required ? (
                   <span className="text-red-500"> *</span>
                 ) : null}
@@ -438,8 +447,8 @@ export default function FormScreen() {
           {!isSignedIn
             ? "Sign in to submit"
             : isSubmitting
-            ? "Submitting..."
-            : "Submit"}
+              ? "Submitting..."
+              : "Submit"}
         </button>
       </div>
 
